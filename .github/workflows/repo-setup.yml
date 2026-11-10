@@ -5,12 +5,10 @@ name: 仓库设置
 # 而 SSH 推送改不了。仓库自带的 GITHUB_TOKEN 有这个权限。
 #
 # 手动触发：Actions → 仓库设置 → Run workflow
+# （不要挂在 push 上 —— 描述和 topics 是低频修改，每次推送都跑没意义）
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - "v*"
 
 permissions:
   contents: write
@@ -26,35 +24,45 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            await github.rest.repos.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              description: 'WordPress 商品导购与评测主题：商品管理、品牌品类分类、限时特惠、SEO、整页缓存与图片优化。开源基础版（GPL v2）。',
-            });
+            try {
+              const r = await github.rest.repos.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                description: 'WordPress 商品导购与评测主题：商品管理、品牌品类分类、限时特惠、SEO、整页缓存与图片优化。开源基础版（GPL v2）。',
+              });
+              core.info('描述已更新');
+            } catch (e) {
+              core.error('设置描述失败: ' + e.status + ' ' + e.message);
+            }
 
       - name: 设置 topics
         uses: actions/github-script@v7
         with:
           script: |
-            await github.rest.repos.replaceAllTopics({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              topicNames: [
-                'wordpress',
-                'wordpress-theme',
-                'wordpress-themes',
-                'theme',
-                'blog',
-                'custom-logo',
-                'custom-menu',
-                'featured-images',
-                'translation-ready',
-                'product-showcase',
-                'seo',
-                'webp',
-                'chinese',
-              ],
-            });
+            try {
+              await github.rest.repos.replaceAllTopics({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                topicNames: [
+                  'wordpress',
+                  'wordpress-theme',
+                  'wordpress-themes',
+                  'theme',
+                  'blog',
+                  'custom-logo',
+                  'custom-menu',
+                  'featured-images',
+                  'translation-ready',
+                  'product-showcase',
+                  'seo',
+                  'webp',
+                  'chinese',
+                ],
+              });
+              core.info('topics 已设置');
+            } catch (e) {
+              core.error('设置 topics 失败: ' + e.status + ' ' + e.message);
+            }
 
       - name: 开启 Secret scanning 与 Push protection
         uses: actions/github-script@v7
@@ -62,8 +70,11 @@ jobs:
           script: |
             // 公开仓库这两项免费，能防止密钥被误提交
             try {
-              await github.rest.repos.enableSecurityManager({ owner: context.repo.owner, repo: context.repo.repo });
-              console.log('security manager 已开启');
+              await github.rest.repos.enableSecurityManager({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              });
+              core.info('security manager 已开启');
             } catch (e) {
-              console.log('security manager: ' + e.message);
+              core.warning('security manager: ' + e.status + ' ' + e.message);
             }
