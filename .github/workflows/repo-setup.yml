@@ -48,10 +48,11 @@ jobs:
             }
 
             try {
+              // 注意：replaceAllTopics 的参数名是 names（不是 topicNames）
               await github.rest.repos.replaceAllTopics({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                topicNames: [
+                names: [
                   'wordpress',
                   'wordpress-theme',
                   'wordpress-themes',
@@ -83,3 +84,17 @@ jobs:
             }
 
             await core.summary.addRaw(lines.join('\n')).write();
+
+            // 把结果写回仓库，方便用匿名 API 读取（logs 需要登录才能看）
+            try {
+              await github.rest.repos.createOrUpdateFileContents({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path: '.github/repo-setup.log',
+                message: 'chore: 更新仓库设置执行日志',
+                content: Buffer.from(lines.join('\n'), 'utf8').toString('base64'),
+              });
+              log('📄 日志已写入 .github/repo-setup.log');
+            } catch (e) {
+              core.warning('写日志文件失败: ' + e.status + ' ' + e.message);
+            }
