@@ -36,6 +36,8 @@ jobs:
 
             log('token 权限: ' + JSON.stringify(context.payload));
 
+            // ⚠️ 改仓库描述需要 Administration: write，GITHUB_TOKEN 通常没有。
+            //    所以这一步大概率 403 —— 描述请到仓库首页的 About 区手动改。
             try {
               const r = await github.rest.repos.update({
                 owner: context.repo.owner,
@@ -73,28 +75,21 @@ jobs:
               log('❌ 设置 topics 失败: ' + e.status + ' ' + e.message);
             }
 
+            // 开 secret scanning / push protection：
+            // 用底层 REST 端点（actions/github-script 的封装里没有这个方法）
             try {
-              await github.rest.repos.enableSecurityManager({
+              await github.request('PUT /repos/{owner}/{repo}/security-and-analysis', {
                 owner: context.repo.owner,
                 repo: context.repo.repo,
+                security_and_analysis: {
+                  secret_scanning: { status: 'enabled' },
+                  secret_scanning_push_protection: { status: 'enabled' },
+                },
               });
-              log('✅ security manager 已开启');
+              log('✅ secret scanning 与 push protection 已开启');
             } catch (e) {
-              log('⚠️ security manager: ' + e.status + ' ' + e.message);
+              log('⚠️ security_and_analysis: ' + e.status + ' ' + e.message);
             }
 
             await core.summary.addRaw(lines.join('\n')).write();
 
-            // 把结果写回仓库，方便用匿名 API 读取（logs 需要登录才能看）
-            try {
-              await github.rest.repos.createOrUpdateFileContents({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                path: '.github/repo-setup.log',
-                message: 'chore: 更新仓库设置执行日志',
-                content: Buffer.from(lines.join('\n'), 'utf8').toString('base64'),
-              });
-              log('📄 日志已写入 .github/repo-setup.log');
-            } catch (e) {
-              core.warning('写日志文件失败: ' + e.status + ' ' + e.message);
-            }
