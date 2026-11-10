@@ -1,0 +1,126 @@
+# ---------------------------------------------------------------------------
+# WordPress
+# ---------------------------------------------------------------------------
+wp-config.php
+wp-config-sample.php
+wp-config-local.php
+wp-config-*.php
+!wp-config-sample.php
+*.bak
+*.old
+*.orig
+*.save
+*.tmp
+*.swp
+*.swo
+*~
+
+# 数据库导出与缓存
+*.sql
+*.sql.gz
+*.sql.bak
+.mysqldump
+wp-content/cache/
+wp-content/uploads/
+!wp-content/uploads/.gitkeep
+wp-content/upgrade/
+wp-content/uploads/cache/
+wp-content/w3tc-config/
+wp-content/object-cache.php
+wp-content/advanced-cache.php
+wp-content/db.php
+wp-content/maintenance.php
+
+# 插件与主题（作为子模块管理的除外）
+wp-content/plugins/
+wp-content/themes/*
+!wp-content/themes/product-showcase-guide/
+wp-content/languages/
+!wp-content/themes/product-showcase-guide/languages/
+
+# ---------------------------------------------------------------------------
+# 依赖
+# ---------------------------------------------------------------------------
+node_modules/
+vendor/
+composer.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.bower_components/
+
+# ---------------------------------------------------------------------------
+# 构建产物（视仓库策略决定是否忽略）
+# ---------------------------------------------------------------------------
+*.map
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------------------------------------------------------------------------
+# 环境与密钥
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+secrets.php
+secrets/
+credentials.json
+
+# ---------------------------------------------------------------------------
+# 编辑器与操作系统
+# ---------------------------------------------------------------------------
+.idea/
+.vscode/
+.vs/
+*.sublime-project
+*.sublime-workspace
+.project
+.settings/
+*.code-workspace
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~.nib
+*.swp
+
+# ---------------------------------------------------------------------------
+# 测试与临时文件
+# ---------------------------------------------------------------------------
+.phpunit.result.cache
+.phpunit.result.cache.bak
+.php-cs-fixer.cache
+.phpstan.neon.dist
+coverage/
+tests/output/
+*.log
+scratch/
+tmp/
+temp/
+.tmp/
+
+# ---------------------------------------------------------------------------
+# 部署工具
+# ---------------------------------------------------------------------------
+.deploy/
+.shipit/
+.captain
+.netrc

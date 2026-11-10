@@ -1,0 +1,126 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  verify:
+    name: 校验（PHP ${{ matrix.php }}）
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        php:
+          - "7.4"
+          - "8.3"
+
+    steps:
+      - name: 检出发布标签
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.ref }}
+
+      - name: 安装 PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "${{ matrix.php }}"
+          coverage: none
+
+      - name: 校验标签与主题版本号一致
+        run: |
+          set -euo pipefail
+
+          tag="${GITHUB_REF_NAME}"
+          if [[ ! "${tag}" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "发布标签必须形如 vX.Y.Z；当前: ${tag}" >&2
+            exit 1
+          fi
+          tag_version="${BASH_REMATCH[1]}"
+
+          # style.css 头部里的 Version 必须与标签一致，否则 WordPress 无法自动更新
+          theme_version="$(sed -n 's/^Version:[[:space:]]*//p' style.css | head -n1 | tr -d '\r')"
+          if [[ "${theme_version}" != "${tag_version}" ]]; then
+            echo "版本号不一致：style.css=${theme_version}，tag=${tag_version}" >&2
+            exit 1
+          fi
+          echo "OK: style.css 版本 ${theme_version} 与标签一致"
+
+      - name: PHP 语法检查
+        run: |
+          set -euo pipefail
+          fail=0
+          while IFS= read -r -d '' file; do
+            if ! php -l "$file" > /dev/null; then
+              echo "语法错误: $file" >&2
+              fail=1
+            fi
+          done < <(find . -name '*.php' -not -path './node_modules/*' -not -path './vendor/*' -print0)
+          exit $fail
+
+  build:
+    name: 构建主题 zip
+    runs-on: ubuntu-latest
+    needs: verify
+    timeout-minutes: 10
+
+    steps:
+      - name: 检出发布标签
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.ref }}
+
+      - name: 打包 zip
+        id: pack
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          zip_name="product-showcase-guide-${version}.zip"
+
+          # WordPress 后台上传主题要求 zip 内第一层就是主题目录
+          zip -r "$zip_name" . \
+            -x '*.git*' \
+            -x './.github/*' \
+            -x './doc/*' \
+            -x './.gitignore' \
+            -x './.editorconfig' \
+            -x './README.md' \
+            -x './CHANGELOG.md' \
+            -x './CONTRIBUTING.md' \
+            -x './CODE_OF_CONDUCT.md' \
+            -x './SECURITY.md' \
+            -x './LICENSE' \
+            -x './readme.txt'
+
+          echo "name=${zip_name}" >> "$GITHUB_OUTPUT"
+          echo "path=${zip_name}" >> "$GITHUB_OUTPUT"
+
+      - name: 上传产物到 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.pack.outputs.path }}
+          generate_release_notes: true
+          body: |
+            ## 安装
+
+            1. 下载下面的 `product-showcase-guide-${GITHUB_REF_NAME#v}.zip`
+            2. WordPress 后台 → 外观 → 主题 → 添加新主题 → 上传主题
+            3. 选择该 zip → 安装 → 启用
+
+            > WordPress 后台上传主题时会先删除目标主题目录再解压。
+            > 演示图片请放在媒体库里，不要依赖主题目录。

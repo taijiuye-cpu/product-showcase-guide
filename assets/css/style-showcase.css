@@ -1,0 +1,1897 @@
+/* ==========================================
+   橱窗风格（showcase）· v2.87.43
+   --------------------------------------------------------------------------
+   后台「主题设置 → 外观风格」选「橱窗」时，才在首页与商品列表页加载这个文件。
+   只管版式与配色，不碰任何业务逻辑（价格 / 券 / 会员价 / 购买按钮都是原来那套）。
+
+   设计参照「品牌大屏」：价值主张优先、一屏一件事、明暗与留白制造节奏。
+   配色沿用现有玫红变量（--main / --main-light / --gold-line…），不另起一套色。
+   ========================================== */
+
+/* ==========================================
+   橱窗风格的容器比货架宽一档（1080 → 1200）：
+   品牌大屏要「大图 + 留白」，容器太窄会显得局促；
+   也让优惠带的横卡、列表页的三列卡都有更宽的发挥空间。
+   ========================================== */
+.as-style-showcase .as-container {
+    max-width: 1200px;
+}
+
+/* ---------- 通用区块 ---------- */
+.as-sc-sec {
+    padding: 72px 0;
+}
+.as-sc-alt {
+    background: var(--surface);
+}
+.as-sc-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+.as-sc-head.is-center {
+    justify-content: center;
+    text-align: center;
+}
+.as-sc-kicker {
+    display: inline-block;
+    font-size: 12px;
+    letter-spacing: .16em;
+    font-weight: 700;
+    color: var(--main);
+    text-transform: uppercase;
+}
+.as-sc-kicker.is-light {
+    color: rgba(255, 255, 255, .72);
+}
+.as-sc-title {
+    font-family: var(--serif);
+    font-size: 32px;
+    letter-spacing: .5px;
+    margin-top: 8px;
+}
+.as-sc-more {
+    font-size: 14px;
+    color: var(--text-sub);
+    white-space: nowrap;
+}
+.as-sc-more:hover {
+    color: var(--main);
+}
+
+/* ---------- 按钮 ---------- */
+.as-sc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 13px 30px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+    white-space: nowrap;
+}
+.as-sc-btn.is-main {
+    background: var(--main);
+    color: #fff;
+}
+.as-sc-btn.is-main:hover {
+    background: var(--main-dark);
+}
+.as-sc-btn:not(.is-main):not(.is-light) {
+    background: transparent;
+    color: var(--main);
+    border-color: rgba(194, 24, 91, .4);
+}
+.as-sc-btn:not(.is-main):not(.is-light):hover {
+    background: var(--main-light);
+}
+.as-sc-btn.is-light {
+    background: #fff;
+    color: var(--main);
+    margin-top: 18px;
+}
+.as-sc-btn.is-sm {
+    padding: 8px 18px;
+    font-size: 13px;
+}
+.as-sc-btns {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.as-sc-btns.is-center {
+    justify-content: center;
+}
+
+/* ---------- ① Hero 大屏 ---------- */
+.as-sc-hero {
+    background: radial-gradient(120% 120% at 85% 10%, #fff 0%, #fff6fa 42%, #fbe7ef 100%);
+    padding: 72px 0 84px;
+    position: relative;
+    overflow: hidden;
+}
+.as-sc-hero:after {
+    content: "";
+    position: absolute;
+    right: -140px;
+    top: -120px;
+    width: 520px;
+    height: 520px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(194, 24, 91, .16), rgba(194, 24, 91, 0) 70%);
+    pointer-events: none;
+}
+.as-sc-hero-grid {
+    display: grid;
+    grid-template-columns: 1.05fr .95fr;
+    gap: 56px;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+.as-sc-eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    letter-spacing: .16em;
+    font-weight: 700;
+    color: var(--main);
+}
+.as-sc-hero-copy h1 {
+    font-family: var(--serif);
+    font-size: 54px;
+    line-height: 1.18;
+    margin: 18px 0 20px;
+    letter-spacing: 1px;
+}
+.as-sc-hero-desc {
+    font-size: 16px;
+    color: var(--text-sub);
+    max-width: 520px;
+    margin: 0 0 30px;
+}
+.as-sc-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-top: 46px;
+    padding-top: 26px;
+    border-top: 1px solid rgba(194, 24, 91, .16);
+}
+.as-sc-stats b {
+    display: block;
+    font-family: var(--serif);
+    font-size: 26px;
+    color: var(--main-dark);
+    line-height: 1.2;
+}
+.as-sc-stats i {
+    font-style: normal;
+    font-size: 13px;
+    /* 同样提深一档：--text-muted 在白底对比度只有 2.43，偏淡看不清 */
+    color: var(--text-sub);
+}
+.as-sc-visual {
+    position: relative;
+    height: 430px;
+}
+/*
+ * Hero 拼贴：三个框都改成**正方形**，图用 absolute 填满 → 方形的商品图完整显示，
+ * 不用 cover 去裁（裁掉一截的商品图在品牌大屏上特别显眼）。
+ */
+.as-sc-photo {
+    position: absolute;
+    border-radius: 18px;
+    background: #fff;
+    padding: 10px;
+    box-shadow: 0 24px 60px rgba(16, 24, 40, .22);
+    overflow: hidden;
+    display: block;
+    aspect-ratio: 1/1;
+}
+.as-sc-photo img {
+    position: absolute;
+    inset: 10px;
+    width: calc(100% - 20px);
+    height: calc(100% - 20px);
+    /* 框是正方形、图也是正方形 → cover 就是完整显示，不会裁 */
+    object-fit: cover;
+    border-radius: 10px;
+    /*
+     * 🔴 v2.87.46 换图过渡改成**交叉溶解**（transition，不是 animation）：
+     *   旧方案 = 硬切 src + 「opacity 0→1 + scale 1.06→1」的入场动画
+     *   → 图片先整块消失、再淡入，三张同时来 → 整块区域"闪一闪"，很晃眼
+     *   （用户 2026-11-06 反馈：「闪一闪的，有点晃眼」）。
+     *   新方案 = 新图叠在旧图**上面**淡入、旧图同时淡出
+     *   → 任何一帧都有图在屏幕上，视觉上是"溶解"而不是"闪烁"。
+     *   同时新图带极轻微的 Ken Burns（scale 1.03 → 1），有呼吸感但不刺眼。
+     */
+    opacity: 1;
+    transition: opacity .62s cubic-bezier(.4, 0, .2, 1),
+                transform .95s cubic-bezier(.22, .61, .36, 1);
+    will-change: opacity, transform;
+}
+/* 新图初始态：透明 + 略大（叠在旧图之上） */
+.as-sc-photo img.as-sc-next {
+    opacity: 0;
+    transform: scale(1.03);
+    z-index: 2;
+}
+/* 新图终态：完全不透明 + 回到原位 */
+.as-sc-photo img.as-sc-on {
+    opacity: 1;
+    transform: scale(1);
+    z-index: 2;
+}
+/* 旧图退出态：淡出 + 略微后退（在下一层） */
+.as-sc-photo img.as-sc-out {
+    opacity: 0;
+    transform: scale(.985);
+    z-index: 1;
+}
+/* 尊重系统「减少动画」设置：过渡去掉 → 直接硬切，不闪不晃 */
+@media (prefers-reduced-motion: reduce) {
+    .as-sc-photo img {
+        transition: none;
+    }
+    .as-sc-photo img.as-sc-next {
+        opacity: 0;
+        transform: none;
+    }
+    .as-sc-photo img.as-sc-on {
+        opacity: 1;
+        transform: none;
+    }
+    .as-sc-photo img.as-sc-out {
+        opacity: 0;
+        transform: none;
+    }
+}
+.as-sc-photo-1 {
+    width: 54%;
+    left: 0;
+    top: 0;
+    z-index: 2;
+}
+.as-sc-photo-2 {
+    width: 38%;
+    right: 0;
+    top: 1%;
+    z-index: 3;
+    transform: rotate(4deg);
+}
+.as-sc-photo-3 {
+    width: 42%;
+    right: 4%;
+    bottom: 0;
+    z-index: 1;
+    transform: rotate(-3deg);
+}
+
+/* 「随机推荐」角标：明确告诉访客这块在动态更新 */
+.as-sc-visual.has-rotator {
+    position: relative;
+}
+.as-sc-visual-tag {
+    position: absolute;
+    right: 4%;
+    bottom: 2%;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .82);
+    border: 1px solid rgba(194, 24, 91, .18);
+    backdrop-filter: blur(6px);
+    color: var(--main-dark);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .5px;
+    box-shadow: 0 4px 14px rgba(16, 24, 40, .1);
+    pointer-events: none;
+}
+.as-sc-visual-tag::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--main);
+    /*
+     * 🔴 v2.87.46：1.6s 的"灭→亮"呼吸太急，是"闪一闪"观感的另一个来源。
+     *   改成 3.2s 的**缓慢呼吸**，且最低只降到 .55（不灭）→ 温和不刺眼。
+     */
+    animation: as-sc-tag-pulse 3.2s ease-in-out infinite;
+}
+@keyframes as-sc-tag-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .55; transform: scale(.82); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .as-sc-visual-tag::before { animation: none; }
+}
+
+/*
+ * 动态随机换图的过渡（v2.87.46 重做）。
+ *
+ * 🔴 旧版（v2.87.45）的问题：用户报「闪一闪的，有点晃眼」。
+ *   原因是**两处叠加**：
+ *     ① 图片用 animation 从 opacity:0 + scale(1.06) 入场
+ *        → 旧图被硬切掉、新图又从全透明开始 → 视觉上"整块消失再出现"；
+ *     ② 外框还同时闪一个玫红描边（as-sc-photo-ring）→ 又是一下强刺激。
+ *   三张图一起做，观感就是整块 Hero 在闪。
+ *
+ * ✅ 新版：
+ *   · 图片走 **交叉溶解**（见上面 .as-sc-next / .as-sc-on / .as-sc-out），
+ *     新旧图重叠，任何一帧都有图 → 不闪；
+ *   · 外框不再闪描边，只留一圈**很淡很慢**的高光（1.4s、透明度 .16），
+ *     用来提示"这里在更新"，但不刺眼；
+ *   · 三张**错峰**入场（0 / 160 / 320ms）→ 有先后节奏，不是齐刷刷一起抖。
+ */
+.as-sc-photo.is-swap {
+    animation: as-sc-photo-glow 1.4s cubic-bezier(.22, .61, .36, 1);
+}
+@keyframes as-sc-photo-glow {
+    0%   { box-shadow: 0 24px 60px rgba(16, 24, 40, .22), 0 0 0 0 rgba(194, 24, 91, 0); }
+    35%  { box-shadow: 0 24px 60px rgba(16, 24, 40, .22), 0 0 0 6px rgba(194, 24, 91, .16); }
+    100% { box-shadow: 0 24px 60px rgba(16, 24, 40, .22), 0 0 0 12px rgba(194, 24, 91, 0); }
+}
+/* 尊重系统「减少动画」设置 */
+@media (prefers-reduced-motion: reduce) {
+    .as-sc-photo.is-swap {
+        animation: none;
+    }
+}
+
+/* ---------- ② 热门文章（榜单） ---------- */
+/*
+ * 位置：Hero 正下方（用户 2026-11-07：「放在 hero 底下，毕竟是导购博客」）。
+ *
+ * ⚠️ **版式不要再动**（用户 2026-11-07：「原来的样式不要变啊，
+ *    电脑端左边一个右边四个，手机端还是按照你之前的样式」）：
+ *      桌面：左 TOP1 大卡（竖排：图在上 + 文字在下）| 右 4 条横排（1 列 4 行）
+ *      平板及以下：单列 —— 大卡在上，4 条在下
+ *    v2.87.56 曾经改成「大卡横向 + 4 条 2×2」，被用户否掉了，已回退。
+ *
+ * 本版只做三处调整（都保留）：
+ *   ① **去掉摘要** —— 手机端窄屏上摘要又高又挤，榜单要的是"一眼看到标题"；
+ *   ② **列表缩略图改正方形** —— 原来 150×84 的小横幅跟大卡的宽图比例不统一；
+ *   ③ **排名数字改成贴在图片左上角的徽章** —— 不再单独占一列，也不再压在图左下角。
+ *
+ * ⚠️ 大卡的封面图保持 16:9（它是主图不是缩略图，改方会让桌面端左列出现
+ *    582×582 的巨图，把整块榜单拉长一倍）。
+ *
+ * ⚠️ 列表缩略图固定正方形容器 + object-fit:cover（文章缩略图本身是 16:9 横幅，
+ *    硬裁会切掉两侧，cover + 居中能保住画面主体）。
+ */
+.as-sc-hot-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 24px;
+    align-items: stretch;
+}
+
+/* ---------- TOP1 大卡（竖排：图在上 + 文字在下） ---------- */
+.as-sc-hot-lead {
+    display: block;
+    background: var(--surface);
+    border: 1px solid #eaedf2;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    color: inherit;
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+.as-sc-hot-lead:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+.as-sc-hot-lead-photo {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: #f1f3f6;
+}
+.as-sc-hot-lead-photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .55s ease;
+}
+.as-sc-hot-lead:hover .as-sc-hot-lead-photo img {
+    transform: scale(1.05);
+}
+.as-sc-hot-lead-body {
+    display: block;
+    padding: 20px 22px 22px;
+}
+.as-sc-hot-cat {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--main);
+    background: rgba(194, 24, 91, .09);
+    padding: 3px 10px;
+    border-radius: 999px;
+}
+.as-sc-hot-lead-title {
+    font-family: var(--serif);
+    font-size: 23px;
+    line-height: 1.42;
+    margin: 11px 0 10px;
+    /* 固定两行 + 超两行截断 → 卡片高度稳定 */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.as-sc-hot-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+}
+.as-sc-hot-meta em {
+    font-style: normal;
+}
+.as-sc-hot-meta i {
+    font-style: normal;
+}
+/* 两项之间的分隔点 */
+.as-sc-hot-meta i::before {
+    content: "·";
+    margin-right: 10px;
+    opacity: .6;
+}
+
+/* ---------- 右侧 4 条横排（1 列 4 行） ---------- */
+.as-sc-hot-rest {
+    display: grid;
+    /* 每条均分高度，跟左边大卡齐平；条目数不是 4 时也不会留空行 */
+    grid-auto-rows: 1fr;
+    gap: 18px;
+}
+.as-sc-hot-item {
+    display: grid;
+    /* 序号徽章移到图上，这里只剩「图 + 文字」两列 */
+    grid-template-columns: 96px 1fr;
+    gap: 14px;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid #eaedf2;
+    border-radius: 14px;
+    padding: 12px 16px 12px 12px;
+    color: inherit;
+    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.as-sc-hot-item:hover {
+    transform: translateY(-2px);
+    border-color: rgba(194, 24, 91, .35);
+    box-shadow: var(--shadow-sm);
+}
+/* 正方形缩略图 */
+.as-sc-hot-thumb {
+    position: relative;
+    display: block;
+    width: 96px;
+    aspect-ratio: 1 / 1;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f1f3f6;
+}
+.as-sc-hot-thumb img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .5s ease;
+}
+.as-sc-hot-item:hover .as-sc-hot-thumb img {
+    transform: scale(1.06);
+}
+.as-sc-hot-txt {
+    min-width: 0;
+}
+.as-sc-hot-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 7px;
+}
+
+/* ---------- 排名徽章：贴在图片左上角 ---------- */
+/*
+ * v2.87.57：序号从「独立一列」/「压在图左下角的大号数字」改成
+ * **贴在图片左上角的徽章**（用户 2026-11-07：「排名的数字，直接贴在图片上左上角当做徽章」）。
+ *
+ * 前 3 名玫红实心白字，4/5 名白底灰字（is-plain）——
+ * 白底是为了在浅色商品图上也能看清。
+ */
+.as-sc-hot-badge {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    background: var(--main);
+    color: #fff;
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 3px 10px rgba(16, 24, 40, .3);
+}
+.as-sc-hot-badge.is-plain {
+    background: rgba(255, 255, 255, .94);
+    color: #6b7280;
+}
+/* 大卡上的徽章大一号 */
+.as-sc-hot-lead-photo .as-sc-hot-badge {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    font-size: 24px;
+    left: 12px;
+    top: 12px;
+}
+
+/* ---------- ② 热门文章 · 响应式 ---------- */
+@media (max-width: 1023px) {
+    /* 左右分栏在平板宽度会太挤 → 上下单列 */
+    .as-sc-hot-grid {
+        grid-template-columns: 1fr;
+    }
+    .as-sc-hot-rest {
+        grid-auto-rows: auto;
+    }
+    .as-sc-hot-item {
+        min-height: 92px;
+    }
+    .as-sc-hot-item {
+        grid-template-columns: 76px 1fr;
+        gap: 12px;
+    }
+    .as-sc-hot-thumb {
+        width: 76px;
+    }
+}
+
+@media (max-width: 600px) {
+    .as-sc-hot-grid {
+        gap: 16px;
+    }
+    .as-sc-hot-rest {
+        gap: 12px;
+    }
+    .as-sc-hot-item {
+        grid-template-columns: 76px 1fr;
+        gap: 12px;
+        padding: 10px 12px 10px 10px;
+        min-height: 96px;
+    }
+    .as-sc-hot-lead-body {
+        padding: 16px 16px 18px;
+    }
+    .as-sc-hot-lead-title {
+        font-size: 19px;
+    }
+    .as-sc-hot-badge {
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        font-size: 15px;
+        left: 6px;
+        top: 6px;
+    }
+    .as-sc-hot-lead-photo .as-sc-hot-badge {
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
+        font-size: 20px;
+        left: 9px;
+        top: 9px;
+    }
+    .as-sc-hot-title {
+        font-size: 15px;
+        margin-bottom: 5px;
+    }
+}
+
+/* 超窄屏（≤360px）：缩略图再收一点，标题才有一行以上的宽度 */
+@media (max-width: 360px) {
+    .as-sc-hot-item {
+        grid-template-columns: 68px 1fr;
+        gap: 10px;
+    }
+    .as-sc-hot-thumb {
+        width: 68px;
+    }
+    .as-sc-hot-title {
+        font-size: 14px;
+    }
+}
+
+/* ---------- ③ 分类带 ---------- */
+/*
+ * 分类带（用户 2026-11-05）：
+ *   · **横向一排、不换行**（手机端也���换行，横向滑动）；
+ *   · 每个分类卡做成**正方形** → 商品图完整显示，一像素不裁；
+ *   · 几个都**居中**排布，不挤在左边。
+ */
+.as-sc-cats-row {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+}
+.as-sc-cats-row::-webkit-scrollbar {
+    display: none;
+}
+/*
+ * 每个分类**等分铺满整行**（用户 2026-11-05：「不管几个分类都能占满一行 自适应」）：
+ * flex-basis:0 + flex-grow:1 → 3 个就是每张 1/3，5 个就是每张 1/5，永远铺满、不留空。
+ * 正方形 + contain → 商品图完整显示，一像素不裁。
+ */
+.as-sc-cat {
+    flex: 1 1 0;
+    min-width: 0;
+    aspect-ratio: 1/1;
+    height: auto;
+}
+.as-sc-cat {
+    position: relative;
+    display: block;
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--surface);
+}
+.as-sc-cat-photo {
+    position: absolute;
+    inset: 0;
+    /* 完整显示商品图，不裁剪（用户 2026-11-05） */
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: #fff;
+    transition: transform .5s ease;
+    opacity: .95;
+}
+.as-sc-cat:hover .as-sc-cat-photo {
+    transform: scale(1.06);
+}
+.as-sc-cat-mask {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(30, 8, 18, 0) 28%, rgba(30, 8, 18, .55) 62%, rgba(24, 6, 14, .9));
+}
+.as-sc-cat-info {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 14px;
+    color: #fff;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, .5);
+}
+.as-sc-cat-info b {
+    display: block;
+    font-size: 18px;
+    font-family: var(--serif);
+}
+.as-sc-cat-info i {
+    font-style: normal;
+    font-size: 12px;
+    opacity: .85;
+}
+
+/* ---------- ④ 限时优惠（深色带） ---------- */
+.as-sc-flash {
+    background: linear-gradient(120deg, #241016 0%, #3a1020 55%, #5a1330 100%);
+    color: #fff;
+    padding: 56px 0;
+}
+/* 左侧文案只占三分之一 → 右侧商品网格更宽，每张横卡 ≈390px */
+.as-sc-flash-grid {
+    display: grid;
+    /*
+     * 两列都要够宽（v2.87.45 定稿）：
+     *   · 左列（文案）≥ 400px —— 倒计时四段数字 + 「距结束」标签需要 ~389px，
+     *     放不下秒块就会掉到第二行（2×2 很难看）；
+     *   · 右列（商品）要够宽 —— 横卡宽度 = (右列 - gap) / 2，
+     *     图区占 42% 后信息区还剩 ~170px，「满150减30」(66) + 「会员到手 ¥183」(82)
+     *     + 间距 6 = 154px → **两个标签同一行排下，不用换行**。
+     * 原来 .78fr 1.22fr 让右列只剩 764px、横卡 335px → 信息区 153px 差 2px → 被截断。
+     */
+    grid-template-columns: minmax(392px, .66fr) 1.34fr;
+    gap: 32px;
+    align-items: center;
+}
+/*
+ * 🔴 v2.87.45：文案区必须 min-width:0 ——
+ *   grid/flex 子项默认 min-width:auto（内容多宽就多宽），
+ *   里面的倒计时数字块（4 段 + 标签，nowrap）会把这一列**撑到超出视口** →
+ *   320px 极窄屏整页出现横向滚动条。
+ *   加 min-width:0 后，列宽回到容器给的宽度，内容自己收缩/换行。
+ */
+.as-sc-flash-copy {
+    min-width: 0;
+}
+/*
+ * 优惠名称 + 券信息同行（用户 2026-11-06）。
+ * flex + wrap：桌面并排一行；手机宽度不够时券胶囊换到下一行（不溢出、不截断）。
+ */
+.as-sc-flash-head {
+    /*
+     * 用 **inline 布局**（不是 flex）→ 标题和券胶囊是**文字流里的两个 inline 元素**：
+     *   · 空间够 → 同一行；
+     *   · 空间不够 → 券胶囊自然换到下一行（文字流的正常行为，不会被 flex 整块挤下去）。
+     * flex + wrap 会把券胶囊**整体**推到下一行并回到最左（看着像换了个模块），
+     * flex + nowrap 又会把标题挤成两行 —— inline 流两个问题都没有。
+     */
+    display: block;
+    margin: 12px 0 14px;
+    line-height: 1.4;
+}
+/*
+ * 名称 + 券胶囊同行，但要**允许标题内部换行**（标题长时不至于被挤成两行）。
+ * 做法：标题 flex:0 1 auto（可收缩）+ white-space:normal（内部可折行），
+ * 券胶囊 flex:none（永不压缩）+ nowrap。
+ * ⚠️ 不用 flex-wrap:nowrap —— 那样标题必须占满整行，券胶囊会被顶到下一行、
+ *    倒计时也会被连带挤掉（v2.87.45 实测踩过）。
+ */
+.as-sc-flash-title {
+    display: inline;
+    white-space: normal;
+}
+.as-sc-flash-coupon {
+    display: inline-block;
+    margin-left: 12px;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+.as-sc-flash-title {
+    font-family: var(--serif);
+    font-size: 34px;
+    line-height: 1.25;
+    color: #fff;
+    word-break: break-word;
+}
+.as-sc-flash-coupon {
+    display: inline-block;
+    flex: none;
+    background: rgba(255, 255, 255, .14);
+    border: 1px dashed rgba(255, 255, 255, .55);
+    border-radius: 999px;
+    padding: 6px 18px;
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+/* 倒计时容器（深色带）—— 数字块本身在 main.css 的 .as-cd.is-hero */
+.as-sc-flash-cd {
+    margin: 16px 0 6px;
+}
+.as-sc-flash-desc {
+    font-size: 13px;
+    color: rgba(255, 255, 255, .6);
+    margin: 0;
+}
+/* 优惠模块里的商品：**两列两行**（用户 2026-11-05 要求） */
+.as-sc-flash-goods {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+/* ==========================================
+   产品卡（橱窗专用组件 as_sc_product_card）
+   --------------------------------------------------------------------------
+   信息区**成对同行**（用户 2026-11-05）：
+     标题（最多 2 行）
+     已售 N 件              ¥259 ¥399     ← 销量与价格一行
+     满150减30              会员到手 ¥183  ← 优惠与会员价一行
+     [      去购买      ]                   ← 通栏，贴卡片底部
+   ⚠️ 网格里**不输出券倒计时**（倒计时只在优惠带左侧的大文案里出现一次）。
+   ⚠️ 全部网格（精选 / 榜单 / 上新 / 列表页 / 优惠带）用同一套结构。
+   ========================================== */
+/*
+ * 本周精选：4 列（用户 2026-11-05：「卡片面积太大了」）。
+ * 容器 1200px → 每张约 285px，比 3 列时的 380px 小一圈，
+ * 一屏能看到更多商品，和下面「最新上架」的 4 列也统一了节奏。
+ */
+.as-sc-grid3 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+}
+.as-sc-grid4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+}
+.as-sc-card {
+    background: var(--surface);
+    border: 1px solid var(--gold-line);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.as-sc-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+.as-sc-card-img {
+    display: block;
+    background: #fafafb;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+}
+.as-sc-card-img img {
+    width: 100%;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+    transition: transform .5s ease;
+}
+.as-sc-card:hover .as-sc-card-img img {
+    transform: scale(1.04);
+}
+.as-sc-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 14px 14px;
+    flex: 1 1 auto;
+}
+.as-sc-card-title {
+    font-size: 15px;
+    line-height: 1.45;
+    font-weight: 600;
+    margin: 0 0 2px;
+    min-height: 2.9em;
+}
+.as-sc-card-title a:hover {
+    color: var(--main);
+}
+/* 一行两列：左项 + 右项（右边用 margin-left:auto 靠右） */
+.as-sc-card-row {
+    display: flex;
+    align-items: center;
+    /*
+     * v2.87.96：两端对齐 —— 券标靠左、会员到手靠右。
+     * 只靠 .as-sc-card-vip 的 margin-left:auto 在「换行」时会失效
+     * （换行后它独占一行，auto 仍能把人推到行尾，但只有单标签时没事），
+     * 这里补 space-between 让「只有券」也稳定贴左、两者并存时拉开。
+     */
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+    /*
+     * 🔴 v2.87.45：**所有**卡片的标签行都允许换行。
+     * 之前只有手机端（≤560px）有 wrap 保护，桌面端是 nowrap →
+     * 只要卡片宽度稍微收窄（v2.87.45 优惠带左列加宽 → 右侧横卡 390→335px），
+     * 「满150减30」+「会员到手 ¥183」就会差 2px 被截断。
+     * 在基础规则上加 wrap，任何宽度下挤不下都换行、绝不截断。
+     */
+    flex-wrap: wrap;
+}
+.as-sc-card-sales {
+    font-size: 11.5px;
+    /*
+     * 颜色用 --text-sub（#6b7280）而不是 --text-muted（#9aa1aa）：
+     * 后者在白底上对比度只有 2.61，低于 WCAG AA 的 4.5 —— 小字号灰字偏淡看不清。
+     * 只改橱窗风格，不动全站变量（--text-muted 还有很多地方在用）。
+     */
+    color: var(--text-sub);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.as-sc-card-price {
+    margin-left: auto;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    white-space: nowrap;
+}
+.as-sc-card-price b {
+    color: var(--price);
+    font-size: 21px;
+    font-weight: 700;
+}
+.as-sc-card-price s {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+.as-sc-card-promo {
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 4px;
+    background: var(--main-light);
+    color: var(--main);
+    border: 1px solid var(--gold-line);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 58%;
+}
+.as-sc-card-promo.is-na {
+    background: var(--surface-2);
+    border-color: var(--border);
+    color: var(--text-muted);
+}
+.as-sc-card-vip {
+    margin-left: auto;
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 4px;
+    background: var(--main-light);
+    color: var(--main-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 58%;
+}
+.as-sc-card-buy {
+    margin-top: auto;
+}
+.as-sc-card-buy .as-buy-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background: var(--main);
+    color: #fff;
+    border: 1px solid var(--main);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    margin-top: 0;
+}
+.as-sc-card-buy .as-buy-btn:hover {
+    background: var(--main-dark);
+    border-color: var(--main-dark);
+    color: #fff;
+}
+
+/* ---------- 优惠带里的横卡（图左文右） ---------- */
+.as-sc-mini .as-sc-card {
+    flex-direction: row;
+    align-items: stretch;
+    border: 0;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .22);
+    /*
+     * ⚠️ 优惠带是深色区块（.as-sc-flash{color:#fff}）→ 卡片里的标题会**继承白字**，
+     *    白底卡片上等于隐形（表现为「小卡没有标题」）。
+     *    这里把卡片自身文字色重置回正文色，标题链接继承它。
+     */
+    color: var(--text);
+}
+.as-sc-mini .as-sc-card-title a {
+    color: inherit;
+}
+.as-sc-mini .as-sc-card-title a:hover {
+    color: var(--main);
+}
+.as-sc-mini .as-sc-card-img {
+    /*
+     * 图区占比 46% → 42%（v2.87.45）：横卡变宽后，把宽度让给信息区一点，
+     * 券标与会员到手价就能在**同一行**排下，不用换行。
+     */
+    width: 42%;
+    flex: none;
+    align-self: center;
+    /* 方框 + 方图 = 完整显示且填满，不裁剪 */
+    aspect-ratio: 1/1;
+    border-bottom: 0;
+    border-right: 1px solid var(--border);
+}
+.as-sc-mini .as-sc-card-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 5px;
+    padding: 10px 14px 10px;
+}
+.as-sc-mini .as-sc-card-title {
+    font-size: 13.5px;
+    min-height: 2.8em;
+}
+.as-sc-mini .as-sc-card-sales {
+    font-size: 11px;
+}
+.as-sc-mini .as-sc-card-price b {
+    font-size: 18px;
+}
+.as-sc-mini .as-sc-card-promo,
+.as-sc-mini .as-sc-card-vip {
+    font-size: 10.5px;
+    padding: 1px 6px;
+}
+/*
+ * 🔴 v2.87.45：优惠带小卡的标签行**允许换行**。
+ * 优惠带左列加宽后右侧横卡从 390px 收到 335px，图区固定占 46%（154px），
+ * 信息区只剩 181px → 「满150减30」(66) + 「会员到手 ¥183」(82) + gap = 154px，
+ * 刚好比可用宽多 2px，而基础规则是 nowrap → **会员到手价被截掉 2px**。
+ * 改法：标签行 wrap + 各标签 max-width:100% → 挤不下就换到下一行，绝不截断。
+ */
+.as-sc-mini .as-sc-card-row.is-tags {
+    flex-wrap: wrap;
+    gap: 3px 6px;
+}
+.as-sc-mini .as-sc-card-row.is-tags .as-sc-card-promo,
+.as-sc-mini .as-sc-card-row.is-tags .as-sc-card-vip {
+    max-width: 100%;
+}
+.as-sc-mini .as-sc-card-buy .as-buy-btn {
+    padding: 7px 12px;
+    font-size: 12px;
+}
+
+/* 榜单：名次压在图上 */
+.as-sc-rank {
+    position: relative;
+}
+.as-sc-rank-item {
+    position: relative;
+}
+/*
+ * 名次徽标：白底商品图上「纯白数字 + 阴影」几乎看不见（第一名的图就是白的），
+ * 所以改成半透明深色圆牌 —— 白图深牌、深图深牌都清楚。
+ */
+.as-sc-rank-num {
+    position: absolute;
+    /*
+     * v2.87.102：原本贴左上角(left:16px)，与卡片图内的券徽章
+     * .as-coupon-badge（left:0/top:0，同为 z-index:3）重叠，排名数字被盖住。
+     * 挪到图片右上角，与左上角角旗对称，两个信息各占一角。
+     */
+    right: 16px;
+    top: 16px;
+    z-index: 3;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(35, 38, 43, .78);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 700;
+    pointer-events: none;
+}
+
+/* ---------- ⑧ 服务承诺 ---------- */
+.as-sc-promise {
+    background: linear-gradient(120deg, #241016, #3d1222);
+    color: #fff;
+}
+.as-sc-promise .as-sc-title {
+    color: #fff;
+}
+/*
+ * 「为什么选择我们」：**不管几个都居中**（用户 2026-11-05）。
+ * 原来固定 4 列 → 本站只有 3 条服务说明时，3 个卡挤在左边、右边空一格，很不平衡。
+ * 改成 flex + justify-content:center：3 个、4 个、5 个都居中排布。
+ */
+.as-sc-promise-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 26px;
+    margin-top: 34px;
+}
+.as-sc-promise-item {
+    flex: 1 1 240px;
+    max-width: 320px;
+    min-width: 0;
+    /* 卡里只有「✦ + 标题」两行：内容**上下左右都居中**（用户 2026-11-05） */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 30px 26px;
+}
+.as-sc-promise-item {
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: 14px;
+    padding: 26px 22px;
+}
+.as-sc-promise-ic {
+    display: block;
+    color: #fff;
+    font-size: 22px;
+    margin-bottom: 14px;
+    opacity: .9;
+}
+.as-sc-promise-item b {
+    display: block;
+    font-size: 17px;
+    font-family: var(--serif);
+    margin-bottom: 6px;
+}
+.as-sc-promise-item i {
+    font-style: normal;
+    font-size: 13px;
+    color: rgba(255, 255, 255, .6);
+    line-height: 1.6;
+}
+.as-sc-promise-note {
+    text-align: center;
+    font-size: 12px;
+    color: rgba(255, 255, 255, .45);
+    margin: 22px 0 0;
+}
+
+/* ---------- ⑨ 文章卡 ---------- */
+/*
+ * 文章区**不跟商品区共用网格**（用户 2026-11-05）：
+ * 商品卡窄一点没关系，文章卡有缩略图 + 标题 + 摘要，塞进 4 列就又挤又空一格。
+ * 现在文章区自己一套：桌面 3 列（3 篇正好铺满）、平板 2 列、**手机 1 列**。
+ */
+.as-sc-articles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+.as-sc-articles .as-post {
+    border-radius: 16px;
+    padding: 24px 22px;
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+.as-sc-articles .as-post:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+/*
+ * 文章卡标题：**固定两行高度 + 超过两行截断**（用户 2026-11-06）。
+ *
+ * 问题：一篇文章标题占 1 行、另一篇占 2 行 → 摘要的起始位置错开一行，
+ * 整个网格看起来参差不齐。
+ * 做法：
+ *   · min-height = 2 × line-height（2.9em）→ 短标题也预留两行，下面对齐；
+ *   · -webkit-line-clamp: 2 → 超过两行的部分截掉（带省略号），不撑高卡片。
+ * ⚠️ 两个必须同时给：只给 line-clamp 的话短标题还是 1 行高；只给 min-height
+ *    的话长标题会溢出到第三行。
+ */
+.as-sc-articles .as-post-title {
+    font-family: var(--serif);
+    font-size: 19px;
+    line-height: 1.45;
+    min-height: 2.9em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+/*
+ * 摘要同样**固定两行**：实测有的是 2 行、有的是 3 行（74px vs 46px），
+ * 标题对齐了、摘要不对齐的话，整块还是参差不齐。
+ */
+.as-sc-articles .as-post-excerpt {
+    line-height: 1.65;
+    min-height: 3.3em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ---------- ⑩ 结尾 CTA ---------- */
+.as-sc-cta {
+    background: linear-gradient(120deg, #fff6fa, #fde8f0);
+    padding: 76px 0;
+    text-align: center;
+}
+.as-sc-cta h2 {
+    font-family: var(--serif);
+    font-size: 34px;
+}
+.as-sc-cta p {
+    color: var(--text-sub);
+    margin: 12px 0 26px;
+}
+
+/* ==========================================
+   商品列表页（橱窗）
+   ========================================== */
+.as-sc-list-head {
+    background: radial-gradient(120% 130% at 80% 0%, #fff 0%, #fff7fa 45%, #fbe7ef 100%);
+    padding: 52px 0 34px;
+}
+.as-sc-list-head h1 {
+    font-family: var(--serif);
+    font-size: 44px;
+    margin: 12px 0 8px;
+}
+.as-sc-list-head p {
+    color: var(--text-sub);
+    font-size: 15px;
+    margin: 0 0 22px;
+}
+.as-sc-chips {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.as-sc-chip {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 999px;
+    padding: 7px 18px;
+    font-size: 14px;
+    color: var(--text-sub);
+    transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+.as-sc-chip:hover {
+    border-color: var(--main);
+    color: var(--main);
+}
+.as-sc-chip.is-on {
+    background: var(--main);
+    border-color: var(--main);
+    color: #fff;
+    font-weight: 600;
+}
+.as-sc-list-body {
+    padding: 38px 0 80px;
+}
+.as-sc-list-grid {
+    display: grid;
+    grid-template-columns: 232px 1fr;
+    gap: 34px;
+    align-items: start;
+}
+/*
+ * 左侧「商品分类 / 会员专属价」吸顶（用户 2026-11-05 要求）：
+ * 往下滑时分类一直在手边，不用滚回顶部再找。top = 头部高 65px + 16px 间距。
+ */
+.as-sc-side {
+    position: sticky;
+    top: 81px;
+    max-height: calc(100vh - 97px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+.as-sc-side::-webkit-scrollbar {
+    width: 6px;
+}
+.as-sc-side::-webkit-scrollbar-thumb {
+    background: rgba(194, 24, 91, .25);
+    border-radius: 3px;
+}
+.as-sc-side-box {
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 18px 18px 20px;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow-sm);
+}
+.as-sc-side-box h3 {
+    font-size: 15px;
+    margin-bottom: 12px;
+}
+.as-sc-side-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-sub);
+}
+.as-sc-side-item i {
+    font-style: normal;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+.as-sc-side-item.is-on {
+    background: var(--main-light);
+    color: var(--main-dark);
+    font-weight: 600;
+}
+.as-sc-side-box.is-vip {
+    background: linear-gradient(140deg, #fff6fa, #fce4ec);
+}
+.as-sc-side-box.is-vip b {
+    font-family: var(--serif);
+    font-size: 17px;
+}
+.as-sc-side-box.is-vip p {
+    font-size: 13px;
+    color: var(--text-sub);
+    margin: 8px 0 14px;
+    line-height: 1.7;
+}
+.as-sc-list-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    color: var(--text-sub);
+    font-size: 13px;
+}
+.as-sc-list-items {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+.as-sc-card.is-list .as-sc-card-title {
+    min-height: 2.8em;
+}
+
+/* 「查看全部商品」按钮行（热门推荐超过 4 个时出现） */
+.as-sc-more-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+/* ==========================================
+   搜索结果页（v2.87.45）
+   ------------------------------------------------------------------
+   搜索页与商品列表页分开：
+   · 页头给一个搜索框（能在结果页直接改关键词）；
+   · 不出现分类 chips / 左侧分类栏（那是分类导航，会把用户带离结果）；
+   · 结果按「商品 / 文章」分两段渲染；
+   · 空结果给搜索框 + 热门商品，不让用户面对空白。
+   ========================================== */
+.as-sc-list-head.is-search h1 {
+    word-break: break-word;
+}
+.as-sc-list-head.is-search p b {
+    color: var(--main);
+    font-size: 18px;
+}
+.as-sc-sep {
+    margin: 0 6px;
+    opacity: .5;
+}
+/* 页头搜索框 */
+.as-sc-search-box {
+    margin-top: 20px;
+    margin-bottom: 26px;
+    max-width: 460px;
+}
+.as-sc-search-box .as-searchform {
+    display: flex;
+    width: 100%;
+}
+/*
+ * ⚠️ input 的 height 必须用 **border-box + 显式 padding**：
+ *    main.css 的 .as-searchform input 有 padding:8px 10px，
+ *    浏览器默认的 input[type=search] 还带 appearance 样式，
+ *    只写 height 会被 padding 挤成 34px（比预期矮一截）。
+ */
+.as-sc-search-box .as-searchform input[type="search"] {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 46px;
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-right: 0;
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    font-size: 15px;
+    line-height: normal;
+    background: #fff;
+    color: var(--text);
+    -webkit-appearance: none;
+    appearance: none;
+}
+.as-sc-search-box .as-searchform input[type="search"]:focus {
+    outline: none;
+    border-color: var(--main);
+    box-shadow: 0 0 0 3px rgba(194, 24, 91, .1);
+}
+.as-sc-search-box .as-searchform button {
+    flex: none;
+    height: 46px;
+    padding: 0 26px;
+    border: 0;
+    background: var(--main);
+    color: #fff;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.as-sc-search-box .as-searchform button:hover {
+    background: var(--main-dark);
+}
+/* 搜索页：没有左侧栏 → 主体占满整宽 */
+.as-sc-list-grid.is-search {
+    grid-template-columns: 1fr;
+}
+/* 分段标题 */
+.as-sc-sub-title {
+    font-family: var(--serif);
+    font-size: 20px;
+    margin: 34px 0 16px;
+}
+/* 搜索结果里的分段小标题（「商品（11）」「文章（1）」） */
+.as-sc-list-grid.is-search .as-sc-list-bar {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 30px 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+}
+.as-sc-list-grid.is-search .as-sc-list-bar:first-child {
+    margin-top: 0;
+}
+/* 空结果 */
+.as-sc-search-empty {
+    padding: 10px 0 20px;
+}
+.as-sc-search-empty > p {
+    font-size: 15px;
+    color: var(--text-sub);
+    margin: 0 0 4px;
+}
+.as-sc-search-empty .as-sc-search-box {
+    margin-top: 18px;
+}
+/* 搜索页里的文章卡：3 列 */
+.as-sc-list-grid.is-search .as-sc-articles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+/* ==========================================
+   手机端
+   ========================================== */
+@media (max-width: 900px) {
+    .as-sc-hero {
+        padding: 40px 0 54px;
+    }
+    .as-sc-hero-grid {
+        grid-template-columns: 1fr;
+        gap: 34px;
+    }
+    .as-sc-hero-copy h1 {
+        font-size: 34px;
+    }
+    .as-sc-hero-desc {
+        font-size: 14px;
+    }
+    .as-sc-visual {
+        height: 260px;
+    }
+    .as-sc-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+        margin-top: 30px;
+    }
+    .as-sc-stats b {
+        font-size: 21px;
+    }
+    .as-sc-sec {
+        padding: 48px 0;
+    }
+    .as-sc-title {
+        font-size: 24px;
+    }
+    .as-sc-grid3,
+    .as-sc-grid4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .as-sc-articles {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    /* 手机端承诺卡通栏（flex 布局下要单独放开 max-width） */
+    .as-sc-promise-item {
+        flex: 1 1 100%;
+        max-width: none;
+    }
+    /* 促销带小卡：手机端改**单列通栏横卡**（两列横卡在 390px 下每张只有 170px，图缩成一条） */
+    .as-sc-flash-goods {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .as-sc-mini .as-card-img {
+        width: 40%;
+    }
+    /* 手机端分类带**仍然横排不换行**，改成固定宽度 + 横向滑动 */
+    .as-sc-cats-row {
+        justify-content: flex-start;
+    }
+    .as-sc-cat {
+        flex: 0 0 44%;
+        max-width: 44%;
+    }
+    .as-sc-flash-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+    .as-sc-flash-head {
+        gap: 10px;
+        margin: 10px 0 12px;
+    }
+    .as-sc-flash-title {
+        font-size: 30px;
+    }
+    .as-sc-flash-coupon {
+        padding: 5px 14px;
+        font-size: 14px;
+    }
+    /*
+     * 超窄屏（≤360px）：标题 30px + 券胶囊放同一行会差 ~10px →
+     * 标题缩到 26px、胶囊 padding 收到 10px，两者就能同行。
+     * （数字块已经是 20px 字号，倒计时保持一行不受影响）
+     */
+    @media (max-width: 360px) {
+        /*
+         * 实测：文案区可用宽只有 265px（容器有 padding），
+         * 标题 186px + margin 12 + 券 90 = 288px → 差 23px 放不下会换行。
+         * 标题 26→23px、券 padding 11→8px、字号 13→12px → 总宽 ~255px，一行放下。
+         */
+        .as-sc-flash-title {
+            font-size: 23px;
+        }
+        .as-sc-flash-coupon {
+            margin-left: 8px;
+            padding: 3px 8px;
+            font-size: 12px;
+        }
+    }
+    .as-sc-cat {
+        height: 150px;
+    }
+    .as-sc-list-grid {
+        grid-template-columns: 1fr;
+    }
+    /*
+     * 手机端侧栏（在网格上方）：
+     *   · 分类那一块**收掉** —— 顶部 chips 已经能切分类，两处重复、白占一屏；
+     *   · 会员专属价压成一条横向小条（标题 + 按钮），保留转化入口但不占高度；
+     *   · 取消吸顶（它已经跑到内容上方，吸顶只会挡视线）。
+     */
+    .as-sc-side {
+        position: static;
+        max-height: none;
+        overflow: visible;
+    }
+    .as-sc-side-box:not(.is-vip) {
+        display: none;
+    }
+    .as-sc-side-box.is-vip {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+        padding: 12px 16px;
+    }
+    .as-sc-side-box.is-vip b {
+        font-size: 15px;
+        white-space: nowrap;
+    }
+    .as-sc-side-box.is-vip p {
+        display: none;
+    }
+    .as-sc-side-box.is-vip .as-sc-btn {
+        margin-left: auto;
+        flex: none;
+    }
+    /* chips 改横向滑动，省掉换行占的多行高度 */
+    .as-sc-chips {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 4px;
+    }
+    .as-sc-chips::-webkit-scrollbar {
+        display: none;
+    }
+    .as-sc-chip {
+        flex: 0 0 auto;
+    }
+    .as-sc-list-items {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+    .as-sc-list-head h1 {
+        font-size: 30px;
+    }
+    /* 搜索页文章卡在手机端一列（缩略图+摘要两列太窄） */
+    .as-sc-list-grid.is-search .as-sc-articles {
+        grid-template-columns: 1fr;
+    }
+    .as-sc-search-box .as-searchform input[type="search"],
+    .as-sc-search-box .as-searchform button {
+        height: 42px;
+    }
+    .as-sc-search-box .as-searchform button {
+        padding: 0 20px;
+    }
+}
+@media (max-width: 560px) {
+    /*
+     * 文章区（as-sc-articles）**手机一列**：有缩略图 + 摘要，两列太窄读不了。
+     */
+    .as-sc-articles {
+        grid-template-columns: 1fr;
+    }
+    /*
+     * 手机端文章区是**单列** → 没有「网格对齐」需求，
+     * 再预留两行只会让短标题下面空一截（看着松散）。
+     * 这里撤掉 min-height，但**保留 line-clamp**（超长标题仍最多两行，不会把卡撑高）。
+     */
+    .as-sc-articles .as-post-title {
+        min-height: 0;
+    }
+    .as-sc-articles .as-post-excerpt {
+        min-height: 0;
+    }
+    .as-sc-promise-grid {
+        grid-template-columns: 1fr;
+    }
+    /* v2.87.66：「更多 / 全部分类」不再单独占一行，与模块标题同行（与桌面端一致）。
+       标题过长时自身换行，按钮始终贴右、不折行。 */
+    .as-sc-head {
+        align-items: flex-end;
+        gap: 12px;
+    }
+    .as-sc-head > div {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .as-sc-more {
+        flex: 0 0 auto;
+    }
+    /* v2.87.71：手机上两个按钮改成上下通栏 —— 并排时「浏览全部商品」(154) 和
+       「成为会员享专属价」(184) 宽度不等，右边那个被挤得字距很紧。 */
+    .as-sc-btns {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .as-sc-btns .as-sc-btn {
+        flex: 0 0 auto;
+        width: 100%;
+    }
+    .as-sc-card-body {
+        padding: 9px 11px 12px;
+        gap: 4px;
+    }
+    .as-sc-card-title {
+        font-size: 14px;
+        min-height: 2.9em;
+    }
+    .as-sc-card-price b {
+        font-size: 19px;
+    }
+    .as-sc-card-buy .as-buy-btn {
+        padding: 7px 10px;
+        font-size: 12px;
+    }
+    /*
+     * 手机端两列卡只有 ~165px 宽，「已售 1400 件」+「¥259 ¥399」放不下会被截成
+     * 「已售 14…」。这里在小卡上**隐去划线原价**，一行就放得下了。
+     */
+    .as-sc-card-sales {
+        font-size: 10.5px;
+    }
+    .as-sc-card-price s {
+        display: none;
+    }
+    /*
+     * 券标 + 会员价在 165px 宽的卡上并排会被截成「满150…」「会员到手 …」→
+     * 让这一行**各自占一行**（.is-tags 只给券/会员价那行用，销量+价格那行不动）。
+     */
+    .as-sc-card-row.is-tags {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    .as-sc-card-row.is-tags .as-sc-card-promo,
+    .as-sc-card-row.is-tags .as-sc-card-vip {
+        max-width: 100%;
+    }
+    .as-sc-card-row.is-tags .as-sc-card-vip {
+        /*
+         * v2.87.96：原来这里是 margin-left:0（理由是"各占一行后左对齐更好读"）。
+         * 但手机端卡片已改成「图左 + 信息右」横卡，两个标签**能放同一行**了 →
+         * 左对齐会在右侧留 17~23px 空白，看起来像没对齐。改回靠右。
+         */
+        margin-left: auto;
+    }
+    .as-sc-mini .as-sc-card-img {
+        width: 42%;
+    }
+
+    /* ==========================================
+       手机端产品网格：**全部单列 + 图左文右横卡**
+       ------------------------------------------------------------------
+       用户 2026-11-06：「手机端的产品网格全部改成跟首页的优惠模块一样，
+       一行一列」。
+
+       之前：精选/榜单/上新/列表页都是 2 列竖卡（每张 358px 见方），
+       一屏只能看 2 个商品，而且图占满整宽、上下留白多。
+
+       现在：与优惠模块的小卡**完全同款**——
+         图（左，正方形不裁）│ 标题 / 销量+价格 / 券+会员价 / 购买按钮
+       一行一张，一屏能看 4~5 个商品，信息还读得全。
+       ⚠️ 桌面端不受影响（这些网格在桌面仍是 4 列 / 3 列竖卡）。
+       ========================================== */
+    .as-sc-grid3,
+    .as-sc-grid4,
+    .as-sc-list-items {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .as-sc-grid3 .as-sc-card,
+    .as-sc-grid4 .as-sc-card,
+    .as-sc-list-items .as-sc-card {
+        flex-direction: row;
+        align-items: stretch;
+    }
+    /* 图区：正方形 + 不裁剪（方图配方框），占满左半 */
+    .as-sc-grid3 .as-sc-card-img,
+    .as-sc-grid4 .as-sc-card-img,
+    .as-sc-list-items .as-sc-card-img {
+        width: 38%;
+        flex: none;
+        align-self: center;
+        aspect-ratio: 1 / 1;
+        border-bottom: 0;
+        border-right: 1px solid var(--border);
+    }
+    .as-sc-grid3 .as-sc-card-body,
+    .as-sc-grid4 .as-sc-card-body,
+    .as-sc-list-items .as-sc-card-body {
+        flex: 1 1 auto;
+        min-width: 0;
+        gap: 4px;
+        padding: 10px 12px 10px;
+    }
+    .as-sc-grid3 .as-sc-card-title,
+    .as-sc-grid4 .as-sc-card-title,
+    .as-sc-list-items .as-sc-card-title {
+        font-size: 14px;
+        min-height: 2.8em;
+    }
+    .as-sc-grid3 .as-sc-card-sales,
+    .as-sc-grid4 .as-sc-card-sales,
+    .as-sc-list-items .as-sc-card-sales {
+        font-size: 11px;
+    }
+    .as-sc-grid3 .as-sc-card-price b,
+    .as-sc-grid4 .as-sc-card-price b,
+    .as-sc-list-items .as-sc-card-price b {
+        font-size: 18px;
+    }
+    /*
+     * 横卡的信息区有 ~190px 宽 → 划线原价**恢复显示**（之前两列窄卡放不下才隐藏），
+     * 有原价才看得出优惠力度。
+     */
+    .as-sc-grid3 .as-sc-card-price s,
+    .as-sc-grid4 .as-sc-card-price s,
+    .as-sc-list-items .as-sc-card-price s {
+        display: inline;
+        font-size: 11px;
+    }
+    /*
+     * 超窄屏（≤360px）：「已售 N 件」+「¥现价 ¥原价」挤在 139px 的行里会被截断
+     * （「已售 2132 件」→「已售 1…」）。这时把**划线原价隐掉**腾出位置 ——
+     * 原价信息价值低于销量（而且很多商品原价与现价相同，显示出来还重复）。
+     */
+    @media (max-width: 360px) {
+        .as-sc-grid3 .as-sc-card-price s,
+        .as-sc-grid4 .as-sc-card-price s,
+        .as-sc-list-items .as-sc-card-price s {
+            display: none;
+        }
+    }
+    /*
+     * 「已售 N 件」在 320px 窄屏会被截成「已售 1…」。
+     * 销量和价格同在 .as-sc-card-row（flex 行）里，销量是 flex:0 0 auto 不伸缩，
+     * 价格又用 margin-left:auto 靠右 → 中间没空间了就被挤掉。
+     * 做法：销量允许收缩并用省略号（至少显示「已售 1…」而不是整块消失），
+     * 同时把字号再收一点（10.5 → 10px）给价格腾位。
+     */
+    .as-sc-grid3 .as-sc-card-sales,
+    .as-sc-grid4 .as-sc-card-sales,
+    .as-sc-list-items .as-sc-card-sales {
+        flex: 0 1 auto;
+        min-width: 0;
+        font-size: 10px;
+    }
+    /*
+     * 券 + 会员价：**自动换行，各占一行**（用户 2026-11-06 确认）。
+     *
+     * 🔴 这里原来写的是 flex-wrap: nowrap + max-width: 48%，想让它俩并排一行 ——
+     *    但手机端是**单列横卡**，信息区只有 139~192px 宽：
+     *      「满150减30」需要 68px，「会员到手 ¥183」需要 87px，合计 161px + gap。
+     *    320px 窄屏时行宽只剩 139px → 两个标签被硬挤在一行，
+     *    券标被截掉 2px、会员价被截掉 20px（显示成「会员到手 ¥…」）。
+     *
+     *    优惠模块（.as-sc-mini）一直用的是 wrap（基础规则），挤不下就换行，
+     *    所以它从来不截断 —— 现在其它模块统一跟它一致。
+     *
+     * 做法：不再写 nowrap / max-width 限制，回到基础规则的 wrap，
+     *      券标与会员价各占一行（max-width:100% 防止单标签超宽）。
+     */
+    .as-sc-grid3 .as-sc-card-row.is-tags,
+    .as-sc-grid4 .as-sc-card-row.is-tags,
+    .as-sc-list-items .as-sc-card-row.is-tags {
+        flex-wrap: wrap;
+        gap: 4px 6px;
+    }
+    /* 桌面端同样保证单标签不超宽（配合基础规则的 wrap） */
+    .as-sc-grid3 .as-sc-card-row.is-tags .as-sc-card-promo,
+    .as-sc-grid4 .as-sc-card-row.is-tags .as-sc-card-promo,
+    .as-sc-list-items .as-sc-card-row.is-tags .as-sc-card-promo,
+    .as-sc-grid3 .as-sc-card-row.is-tags .as-sc-card-vip,
+    .as-sc-grid4 .as-sc-card-row.is-tags .as-sc-card-vip,
+    .as-sc-list-items .as-sc-card-row.is-tags .as-sc-card-vip {
+        max-width: 100%;
+    }
+    .as-sc-grid3 .as-sc-card-row.is-tags .as-sc-card-promo,
+    .as-sc-grid4 .as-sc-card-row.is-tags .as-sc-card-promo,
+    .as-sc-list-items .as-sc-card-row.is-tags .as-sc-card-promo,
+    .as-sc-grid3 .as-sc-card-row.is-tags .as-sc-card-vip,
+    .as-sc-grid4 .as-sc-card-row.is-tags .as-sc-card-vip,
+    .as-sc-list-items .as-sc-card-row.is-tags .as-sc-card-vip {
+        max-width: 100%;
+    }
+    /* v2.87.96：同行时靠右（原来的左对齐理由"各占一行"已不成立） */
+    .as-sc-grid3 .as-sc-card-row.is-tags .as-sc-card-vip,
+    .as-sc-grid4 .as-sc-card-row.is-tags .as-sc-card-vip,
+    .as-sc-list-items .as-sc-card-row.is-tags .as-sc-card-vip {
+        margin-left: auto;
+    }
+    /*
+     * 无券/无会员价的卡片比有券的矮一截 —— 手机端是**单列**，卡片上下排列，
+     * 没有「同行要对齐」的问题，所以不强行统一高度（省下白白的空行）。
+     */
+    /*
+     * 榜单名次圆牌在横卡下压在图上，缩小一号免得喧宾夺主。
+     * v2.87.102：手机是「图 38% 左 + 信息右」横卡，若用整卡 right:10px，
+     * 圆牌会落到右侧文字区压住标题 → 改为贴**图片列**的右上角：
+     *   38% 列宽 − 26px 圆牌 − 10px 内缩 = calc(38% - 36px)
+     * ⚠️ 38% 与上面 .as-sc-card-img{width:38%} 同源，改横卡列宽时这里要同步。
+     */
+    .as-sc-rank-num {
+        width: 26px;
+        height: 26px;
+        font-size: 14px;
+        right: auto;
+        left: calc(38% - 36px);
+        top: 10px;
+    }
+}

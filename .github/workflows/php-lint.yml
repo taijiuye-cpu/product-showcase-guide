@@ -1,0 +1,45 @@
+name: PHP Syntax Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    name: PHP 语法检查
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, mysqli
+          coverage: none
+
+      - name: 逐个文件语法检查
+        run: |
+          fail=0
+          while IFS= read -r -d '' file; do
+            if ! php -l "$file"; then
+              fail=1
+            fi
+          done < <(find . -name '*.php' -not -path './node_modules/*' -not -path './vendor/*' -print0)
+          exit $fail
+
+      - name: 检查文件末尾换行
+        run: |
+          fail=0
+          while IFS= read -r -d '' file; do
+            # 末字节不是换行符（10）就报错
+            if [ -s "$file" ] && [ "$(tail -c 1 "$file" | od -An -t u1 | tr -d ' ')" != "10" ]; then
+              echo "缺少末尾换行: $file"
+              fail=1
+            fi
+          done < <(find . -name '*.php' -print0)
+          exit $fail

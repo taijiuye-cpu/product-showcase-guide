@@ -1,0 +1,475 @@
+/* ============================================================================
+ * WP 后台 · 经典编辑器（文章 / 页面 / 产品）· 移动端 App 风格
+ *
+ * 作用域（两道锁，缺一不可）：
+ *   1. 文件本身只在 post.php / post-new.php 加载（见 functions.php 的
+ *      as_admin_editor_app_styles()，守卫 $screen->base === 'post'）；
+ *   2. 里面**所有**规则都包在 @media screen and (max-width: 782px) 里
+ *      —— 桌面端与其它后台页面 100% 不受影响。
+ *
+ * 选择器一律带 body.post-php / body.post-new-php 前缀：
+ *   主题的 admin-mobile.css 是全局注入后台的，里面有
+ *   `.wp-core-ui .button`、`#submitdiv { display:flex }` 这类同/近特异性规则，
+ *   加一层 body 类把特异性抬上去（id+#2 类+标签 = 1,2,1），稳定压过它。
+ *
+ * 设计目标（用户 2026-10-11）：
+ *   · 手机上编辑文章要顺手：**发布/保存按钮永远够得着**（原生要滚过整篇正文才看到）；
+ *   · 标题够大够清楚，工具条（视觉/文本切换、添加媒体）吸顶不跑丢；
+ *   · 卡片化分区 + 大触控目标，摆脱原生 WP 表单的观感。
+ *
+ * 改配色只动下面 :root 之外的这份变量即可（与插件 as-ai-app.css 同一套色）。
+ * ========================================================================== */
+
+@media screen and (max-width: 782px) {
+
+	/* ---------- 0. 设计变量 + 底部为固定操作条让位 ---------- */
+	body.post-php,
+	body.post-new-php {
+		--as-primary: #2f6fed;
+		--as-primary-dark: #245ac4;
+		--as-primary-soft: #eef3fe;
+		--as-text: #14171f;
+		--as-muted: #697386;
+		--as-line: #e4e7ee;
+		--as-bg-soft: #f7f8fb;
+		--as-radius: 16px;
+		--as-radius-sm: 12px;
+		--as-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 10px 24px -14px rgba(16, 24, 40, .28);
+		--as-shadow-sm: 0 1px 2px rgba(16, 24, 40, .05);
+		/*
+		 * 底部固定操作条实测高 193px（手机上 390×844）：
+		 *   状态行 50 + 保存/预览 48 + 发布 61 + 内边距 ≈ 193
+		 * 这里给 230px，留 37px 余量 —— 换行数不同、有「移至回收站」时也不会被盖住。
+		 * 🔴 这个值必须 ≥ 操作条实际高度，否则正文最后一段会被固定条压住。
+		 */
+		--as-bar-clear: 230px;
+	}
+
+	body.post-php #wpbody-content,
+	body.post-new-php #wpbody-content {
+		padding-bottom: var(--as-bar-clear);
+	}
+
+	body.post-php .wrap,
+	body.post-new-php .wrap {
+		margin: 0;
+		max-width: 100%;
+	}
+
+	/* ---------- 1. 页面标题：收窄，别占两行 ---------- */
+	body.post-php .wrap > h1.wp-heading-inline,
+	body.post-new-php .wrap > h1.wp-heading-inline {
+		margin: 6px 0 10px;
+		font-size: 18px;
+		line-height: 1.35;
+	}
+
+	body.post-php .wrap > .page-title-action,
+	body.post-new-php .wrap > .page-title-action {
+		top: 0;
+		margin: 0 0 10px 8px;
+		padding: 6px 12px;
+		font-size: 13px;
+	}
+
+	/* ---------- 2. 标题输入框：像一篇文章的标题 ---------- */
+	body.post-php #titlediv,
+	body.post-new-php #titlediv {
+		margin-bottom: 12px;
+	}
+
+	/*
+	 * 标题输入框的字号被 admin-mobile.css 的
+	 *   input[type="text"] { font-size: 16px !important }
+	 * 压住了 —— 那是为了防 iOS 聚焦缩放加的 !important。
+	 * 这里必须同样带 !important 才能改回 19px（特异性 1,2,1 本来就压得过
+	 * input[type="text"] 的 0,1,1，两个都 !important 时按特异性判胜）。
+	 * 19px 同样 > 16px，不会破坏防缩放。
+	 */
+	body.post-php #titlediv #title,
+	body.post-new-php #titlediv #title {
+		min-height: 56px;
+		padding: 13px 14px;
+		border: 1px solid var(--as-line);
+		border-radius: var(--as-radius-sm);
+		background: #fff;
+		color: var(--as-text);
+		font-size: 19px !important;
+		line-height: 1.4;
+		font-weight: 600;
+		box-shadow: var(--as-shadow-sm);
+	}
+
+	body.post-php #titlediv #title:focus,
+	body.post-new-php #titlediv #title:focus {
+		border-color: var(--as-primary);
+		box-shadow: 0 0 0 3px var(--as-primary-soft);
+		outline: 0;
+	}
+
+	/* WP 的占位文字是绝对定位的，要跟着标题框一起挪（字号必须与输入框一致） */
+	body.post-php #titlediv #title-prompt-text,
+	body.post-new-php #titlediv #title-prompt-text {
+		padding: 15px 14px;
+		font-size: 19px !important;
+		font-weight: 600;
+		color: #9aa3b2;
+	}
+
+	/*
+	 * 固定链接区（#edit-slug-box，在 #titlediv 内部）。
+	 *
+	 * 🔴 千万不要给它加背景 / 内边距 —— 新建文章时它是**空的**（只有几个空白字符，
+	 *    :empty 匹配不到），加了就成了标题下面一个莫名其妙的空白灰盒子（实测高 41px，
+	 *    把 #titlediv 从 59px 撑到 108px）。
+	 * 这里只当普通小字处理：有内容时才好看，没内容时高度为 0、完全不可见。
+	 */
+	body.post-php #edit-slug-box,
+	body.post-new-php #edit-slug-box {
+		margin: 6px 2px 0;
+		padding: 0;
+		border: 0;
+		border-radius: 0;
+		background: none;
+		min-height: 0;
+		font-size: 12.5px;
+		line-height: 1.6;
+		color: var(--as-muted);
+	}
+
+	/* ---------- 3. 正文编辑器 ---------- */
+	body.post-php #postdivrich,
+	body.post-new-php #postdivrich {
+		margin-bottom: 14px;
+	}
+
+	/*
+	 * 工具条（视觉/文本切换 + 添加媒体 / 插入产品）吸顶。
+	 *
+	 * 🔴 必须带 !important：这条规则不是被别的样式表压住的，而是 WP 自带的
+	 *    editor-expand（#postdivrich 上会加 .wp-editor-expand 类）在 JS 里给它写了
+	 *    **行内样式** `position: absolute; top: 0px; width: 364px;`。
+	 *    行内样式优先于任何选择器，只有 !important 才压得住。
+	 *
+	 * ⚠️ 不要顺手加 `width: auto !important` —— 实测那样会让「可视化/代码」两个按钮
+	 *    换行，工具条从 72px 涨到 119px（手机上白占 14% 屏）。保留 WP 算出的原宽度
+	 *    就好，高度仍是 72px。
+	 *
+	 * 实测（390×844）：滚到 300 / 600px 时工具条稳定停在 top:46，编辑区滚过去后自动释放。
+	 * top 用 WP 的 admin bar 高度变量，取不到就退 46px（手机端高度）。
+	 */
+	body.post-php #wp-content-editor-tools,
+	body.post-new-php #wp-content-editor-tools {
+		position: sticky !important;
+		top: var(--wp-admin--admin-bar--height, 46px) !important;
+		z-index: 60;
+		padding: 8px 10px;
+		border-bottom: 1px solid var(--as-line);
+		background: #fff;
+	}
+
+	/* 工具条里的按钮：手指点得到 */
+	body.post-php #wp-content-editor-tools .wp-media-buttons .button,
+	body.post-new-php #wp-content-editor-tools .wp-media-buttons .button,
+	body.post-php #wp-content-editor-tools .wp-switch-editor,
+	body.post-new-php #wp-content-editor-tools .wp-switch-editor {
+		min-height: 40px;
+		margin-bottom: 0;
+		padding: 6px 12px;
+		border-radius: 10px;
+		font-size: 13.5px;
+		line-height: 1.5;
+	}
+
+	body.post-php #wp-content-editor-tools .wp-editor-tabs,
+	body.post-new-php #wp-content-editor-tools .wp-editor-tabs {
+		float: none;
+		margin: 8px 0 0;
+	}
+
+	body.post-php #wp-content-editor-container,
+	body.post-new-php #wp-content-editor-container {
+		border: 1px solid var(--as-line);
+		border-top: 0;
+		border-radius: 0 0 var(--as-radius-sm) var(--as-radius-sm);
+		overflow: hidden;
+		background: #fff;
+	}
+
+	/* TinyMCE 的工具条（JS 生成，初始 HTML 里没有）：换行显示，别横向挤出屏幕 */
+	body.post-php #wp-content-editor-container .mce-toolbar-grp,
+	body.post-new-php #wp-content-editor-container .mce-toolbar-grp {
+		padding: 4px 6px;
+	}
+
+	body.post-php #wp-content-editor-container .mce-toolbar .mce-btn,
+	body.post-new-php #wp-content-editor-container .mce-toolbar .mce-btn {
+		margin: 2px 1px;
+	}
+
+	/* 字数是信息，缩小别抢戏 */
+	body.post-php #post-status-info,
+	body.post-new-php #post-status-info {
+		margin: 6px 2px 0;
+		font-size: 12px;
+		color: var(--as-muted);
+	}
+
+	/* ---------- 4. 各类 Metabox：卡片化 ---------- */
+	body.post-php #poststuff .postbox,
+	body.post-new-php #poststuff .postbox {
+		margin-bottom: 14px;
+		border: 1px solid var(--as-line);
+		border-radius: var(--as-radius-sm);
+		background: #fff;
+		box-shadow: var(--as-shadow-sm);
+		overflow: hidden;
+	}
+
+	body.post-php #poststuff .postbox > .postbox-header,
+	body.post-new-php #poststuff .postbox > .postbox-header {
+		border-bottom: 1px solid var(--as-line);
+		background: var(--as-bg-soft);
+	}
+
+	body.post-php #poststuff .postbox .hndle,
+	body.post-new-php #poststuff .postbox .hndle {
+		padding: 12px 14px;
+		font-size: 14px;
+		font-weight: 600;
+		line-height: 1.4;
+		color: var(--as-text);
+	}
+
+	body.post-php #poststuff .postbox .inside,
+	body.post-new-php #poststuff .postbox .inside {
+		padding: 12px 14px;
+		margin: 0;
+	}
+
+	/* 主题的属性面板（.as-meta-table）也走卡片内边距 */
+	body.post-php #poststuff .as-meta-table th,
+	body.post-new-php #poststuff .as-meta-table th {
+		font-size: 13.5px;
+		line-height: 1.6;
+	}
+
+	/* ---------- 5. 分类 / 标签：加大触控目标 ---------- */
+	body.post-php #categorychecklist li,
+	body.post-new-php #categorychecklist li,
+	body.post-php #post_tag .tagchecklist li,
+	body.post-new-php #post_tag .tagchecklist li {
+		padding: 5px 0;
+		line-height: 1.6;
+	}
+
+	body.post-php #categorychecklist input[type="checkbox"],
+	body.post-new-php #categorychecklist input[type="checkbox"] {
+		margin-top: 1px;
+	}
+
+	/* ---------- 6. 底部固定操作条（最要紧的一条） ---------- */
+	/*
+	 * 原生布局里 #submitdiv（发布框）排在整篇正文之后，手机上要滚很久才够得着。
+	 * 这里把它固定到底部：发布 / 更新 / 保存草稿 / 预览 永远在拇指位置。
+	 * 高度上限 42vh —— 万一可见性、定时发布的展开面板被打开，条自身可以内部滚动，
+	 * 不会把正文挤没。
+	 */
+	body.post-php #submitdiv,
+	body.post-new-php #submitdiv {
+		display: block; /* 复位 admin-mobile.css 给它加的 flex */
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 9998;
+		max-height: 42vh;
+		margin: 0;
+		border: 1px solid var(--as-line);
+		border-bottom: 0;
+		border-radius: var(--as-radius) var(--as-radius) 0 0;
+		background: #fff;
+		box-shadow: 0 -8px 28px -10px rgba(16, 24, 40, .3);
+		overflow-y: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	/* 条里的「发布」标题栏和折叠箭头没意义了，收掉省高度 */
+	body.post-php #submitdiv > .postbox-header,
+	body.post-new-php #submitdiv > .postbox-header {
+		display: none;
+	}
+
+	body.post-php #submitdiv #submitpost,
+	body.post-new-php #submitdiv #submitpost {
+		padding: 8px 12px 10px;
+	}
+
+	/*
+	 * 状态 / 可见性 / 发布时间：压成小字。
+	 *
+	 * 三项合计约 405px > 可视 376px，本来就放不下一行。
+	 * 一开始写成 nowrap + overflow-x:auto（横向滑），结果右侧那半句被硬生生截断，
+	 * 看着像 bug。改成允许换行（实测两行、高 50px），信息完整、不会误以为坏掉。
+	 * 三个「编辑」链接全部保留 —— 手机上仍能改状态 / 可见性 / 定时发布。
+	 */
+	body.post-php #submitdiv #misc-publishing-actions,
+	body.post-new-php #submitdiv #misc-publishing-actions {
+		display: block;
+		margin: 0 0 6px;
+		padding: 0 0 6px;
+		border-bottom: 1px solid var(--as-line);
+		font-size: 12.5px;
+		line-height: 1.7;
+		color: var(--as-muted);
+		white-space: normal;
+		overflow: visible;
+	}
+
+	body.post-php #submitdiv #misc-publishing-actions .misc-pub-section,
+	body.post-new-php #submitdiv #misc-publishing-actions .misc-pub-section {
+		display: inline;
+		margin: 0;
+		padding: 0 14px 0 0;
+		border: 0;
+		font-size: 12.5px;
+	}
+
+	body.post-php #submitdiv #misc-publishing-actions .misc-pub-section .dashicons,
+	body.post-new-php #submitdiv #misc-publishing-actions .misc-pub-section .dashicons {
+		display: none;
+	}
+
+	body.post-php #submitdiv #misc-publishing-actions br,
+	body.post-new-php #submitdiv #misc-publishing-actions br {
+		display: none;
+	}
+
+	body.post-php #submitdiv #misc-publishing-actions a,
+	body.post-new-php #submitdiv #misc-publishing-actions a {
+		font-size: 12.5px;
+	}
+
+	/* 6.2 保存草稿 / 预览：两个等宽按钮 */
+	body.post-php #submitdiv #minor-publishing-actions,
+	body.post-new-php #submitdiv #minor-publishing-actions {
+		display: flex;
+		flex-wrap: nowrap;
+		gap: 8px;
+		align-items: center;
+		margin: 0 0 8px;
+		padding: 0;
+		border: 0;
+	}
+
+	body.post-php #submitdiv #minor-publishing-actions #save-action,
+	body.post-new-php #submitdiv #minor-publishing-actions #save-action,
+	body.post-php #submitdiv #minor-publishing-actions #preview-action,
+	body.post-new-php #submitdiv #minor-publishing-actions #preview-action {
+		flex: 1 1 0;
+		float: none;
+		margin: 0;
+		text-align: center;
+	}
+
+	body.post-php #submitdiv #minor-publishing-actions .button,
+	body.post-new-php #submitdiv #minor-publishing-actions .button {
+		width: 100%;
+		min-height: 44px;
+		border-radius: var(--as-radius-sm);
+		font-size: 14px;
+		line-height: 1.4;
+		text-align: center;
+	}
+
+	/*
+	 * 🔴 已发布文章那一版，#save-action 是个**空壳** —— HTML 里只剩空白字符
+	 *    （<div id="save-action">\n\t\t\t\t</div>），所以 :empty 匹配不到。
+	 *    它被上面的 flex:1 撑着白占半行，把「预览更改」挤到右半边、左半留空。
+	 *    这里用 :has() 判断里面到底有没有元素：没有就整块收掉，
+	 *    「预览更改」自然铺满一整行（实测已发布文章即为此形态）。
+	 *    :has() 不支持的老浏览器只是退回原样，不会坏。
+	 */
+	body.post-php #submitdiv #minor-publishing-actions #save-action:not(:has(*)),
+	body.post-new-php #submitdiv #minor-publishing-actions #save-action:not(:has(*)) {
+		display: none;
+	}
+
+	/* 6.3 发布 / 更新：整条通栏的主按钮 */
+	body.post-php #submitdiv #major-publishing-actions,
+	body.post-new-php #submitdiv #major-publishing-actions {
+		display: flex;
+		flex-wrap: nowrap;
+		gap: 10px;
+		align-items: center;
+		margin: 0;
+		padding: 8px 0 0;
+		border: 0;
+		border-top: 1px solid var(--as-line);
+	}
+
+	body.post-php #submitdiv #major-publishing-actions #publishing-action,
+	body.post-new-php #submitdiv #major-publishing-actions #publishing-action {
+		flex: 1 1 auto;
+		float: none;
+		margin: 0;
+		text-align: left;
+	}
+
+	body.post-php #submitdiv #major-publishing-actions #publishing-action .button-primary,
+	body.post-new-php #submitdiv #major-publishing-actions #publishing-action .button-primary,
+	body.post-php #submitdiv #major-publishing-actions #publish,
+	body.post-new-php #submitdiv #major-publishing-actions #publish {
+		width: 100%;
+		min-height: 48px;
+		border-radius: var(--as-radius-sm);
+		font-size: 16px;
+		font-weight: 600;
+		line-height: 1.4;
+		text-align: center;
+	}
+
+	/* 移至回收站：小字链接，别跟主按钮抢位置 */
+	body.post-php #submitdiv #major-publishing-actions #delete-action,
+	body.post-new-php #submitdiv #major-publishing-actions #delete-action {
+		flex: 0 0 auto;
+		float: none;
+		margin: 0;
+		font-size: 12.5px;
+		line-height: 1.4;
+		text-align: right;
+	}
+
+	body.post-php #submitdiv #major-publishing-actions #delete-action .submitdelete,
+	body.post-new-php #submitdiv #major-publishing-actions #delete-action .submitdelete {
+		color: #b42318;
+	}
+
+	/*
+	 * 🔴 WP 的 AJAX 转圈图标 .spinner 是 inline-block，默认就给它所在的行留了高度：
+	 *    实测「保存草稿」那行被它从 44px 撑到 78px、「发布」那行从 61px 撑到 108px，
+	 *    整个固定条因此从 193px 涨到 248px —— 白占屏幕，还会盖住正文最后一段。
+	 *    这个条上不需要它：保存时按钮会变成 disabled，WP 也会弹「草稿已保存」提示。
+	 */
+	body.post-php #submitdiv .spinner,
+	body.post-new-php #submitdiv .spinner {
+		display: none;
+	}
+
+	/* ---------- 7. 通知条 / 页脚 ---------- */
+	body.post-php .notice,
+	body.post-new-php .notice,
+	body.post-php div.updated,
+	body.post-new-php div.updated,
+	body.post-php div.error,
+	body.post-new-php div.error {
+		margin: 10px 0;
+		padding: 10px 12px;
+		border-radius: 10px;
+	}
+
+	body.post-php #wpfooter,
+	body.post-new-php #wpfooter {
+		display: none; /* 手机上页脚纯占位 */
+	}
+}

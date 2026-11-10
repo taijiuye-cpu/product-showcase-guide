@@ -1,0 +1,562 @@
+/**
+ * WP 后台 · 移动端适配
+ *
+ * 目标：手机上打开 WP 后台也能正常改商品、发订单、填配置，不必再开电脑。
+ *
+ * 核心手段（按重要性排序）：
+ *   1. 输入框字号强制 16px —— iOS Safari 会在聚焦 <16px 的输入框时自动放大整页，
+ *      放大后用户常常找不回原来的位置，体验极差。这是手机端后台最大的坑。
+ *   2. 宽表格包一层横向滚动 —— WP 的 widefat 表格在手机上会把页面撑到几千像素宽，
+ *      右侧列完全点不到。这里用 display:block + overflow-x:auto 让表格自己滚。
+ *   3. 属性面板（.as-meta-table）在手机上改成「标签在上、控件在下」堆叠，避免
+ *      固定 132px 标签列 + 剩余宽度在窄屏被压扁。
+ *   4. 按钮/表单元素加大到手指可点的尺寸（WP 默认 30px 高，手指点不准）。
+ *
+ * 断点用 782px —— 与 WP 自带的 admin.css 断点一致，避免两套样式打架。
+ * 只在窄屏生效，宽屏桌面端行为完全不变。
+ */
+
+/* ==========================================
+   1. 基础：字号与触控尺寸
+   ========================================== */
+
+/*
+ * iOS 缩放的关键：iOS Safari 只在输入框计算字号 < 16px 时自动放大。
+ * 注意必须用 font-size 而不是 zoom / transform，那些会被忽略或引起布局错乱。
+ */
+input[type="text"],
+input[type="email"],
+input[type="url"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="number"],
+input[type="date"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="time"],
+input[type="week"],
+input[type="hidden"] + input,
+textarea,
+select,
+.editor-styles-wrapper .wp-editor-area,
+.edit-post-fullscreen-mode-close,
+.code-editor textarea,
+#wp-content-editor-container {
+    font-size: 16px !important;
+    /* 提高触摸命中率：点击热区略微外扩，不改变视觉大小 */
+    touch-action: manipulation;
+}
+
+/* 输入框、文本域、下拉框：占满容器宽度，字号继承上面的 16px */
+input[type="text"],
+input[type="email"],
+input[type="url"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="number"],
+textarea,
+select {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+textarea {
+    line-height: 1.6;
+}
+
+/* 按钮：WP 默认偏小，手指难点。统一加高 */
+.wp-core-ui .button,
+.wp-core-ui .button-primary,
+.wp-core-ui .button-secondary,
+.wp-core-ui .button-large,
+.wp-core-ui .button-hero,
+.wp-core-ui .page-title-action .button,
+.wp-core-ui .wp-switch-editor,
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+.button {
+    min-height: 38px;
+    line-height: 1.4;
+    padding: 6px 14px;
+    box-sizing: border-box;
+}
+
+/* 触摸设备去掉 hover 态的位移/阴影，避免点完"卡住"的错觉 */
+@media (hover: none) {
+    .wp-core-ui .button:hover,
+    .wp-core-ui .button-primary:hover {
+        transform: none;
+    }
+}
+
+/* 复选框 / 单选框：WP 在手机上会撑满整行，这里压回正常大小并加大点击区 */
+input[type="checkbox"],
+input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    vertical-align: middle;
+    margin-right: 6px;
+    flex: 0 0 auto;
+}
+
+/* ==========================================
+   2. 页面骨架：留白、标题区
+   ========================================== */
+
+#wpbody-content {
+    padding-bottom: 60px; /* 给底部的保存条留位置，避免被遮住 */
+}
+
+.wp-core-ui #wpbody-content {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+/* 页面标题栏：标题换行，按钮另起一行占满 */
+.wp-core-ui .wp-header-end .search-box {
+    margin-bottom: 8px;
+}
+
+h1.wp-heading-inline,
+.wp-core-ui h1 {
+    font-size: 23px;
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+.wrap > h1,
+.wrap > h2 {
+    word-break: break-word;
+}
+
+/* 分组标题（我们的 as-meta-group-title / WP 的 h2）别被贴太紧 */
+.wp-core-ui .postbox .hndle,
+.wp-core-ui .postbox .handlediv {
+    /* WP 自带的拖动把手在手机上点不到，这里给足高度 */
+    padding: 10px 0 10px 8px;
+}
+
+/* MetaBox 之间的间距 */
+.wp-core-ui .postbox {
+    margin-bottom: 12px;
+}
+
+/* ==========================================
+   3. 宽表格：包一层横向滚动
+   ========================================== */
+
+/*
+ * WP 后台到处是 table.widefat（订单列表、商品列表、用户列表…），
+ * 列一多就把整页撑得极宽。这里让表格自己横向滚，页面不再被撑破。
+ *
+ * 关键：不能对 <table> 直接加 overflow（table 不支持）。
+ * 所以用 display:block 让它变成可滚动容器。
+ */
+@media screen and (max-width: 782px) {
+    .wp-core-ui table.widefat,
+    .wp-core-ui table.widefat tbody,
+    .wp-core-ui table.widefat thead,
+    .wp-core-ui table.widefat tfoot,
+    .wp-core-ui .wp-list-table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+    }
+
+    /* thead 也要能滚：单独包一层时用 sticky 让表头始终可见 */
+    .wp-core-ui table.widefat thead th {
+        position: sticky;
+        top: 46px; /* 避开顶部固定工具条 */
+        z-index: 3;
+        background: #f6f7f7;
+    }
+
+    /* 表格里的操作按钮：点得到 */
+    .wp-core-ui table.widefat td .row-actions {
+        display: flex;
+        gap: 8px;
+        padding-right: 4px;
+    }
+
+    .wp-core-ui table.widefat td .row-actions a {
+        padding: 6px 4px;
+    }
+
+    /* 行与行之间加分隔线，横向滚动时能分清是不是同一行 */
+    .wp-core-ui table.widefat tr {
+        border-bottom: 1px solid #e0e0e0;
+    }
+}
+
+/* ==========================================
+   4. 属性面板（.as-meta-table）：改成上下堆叠
+   ========================================== */
+
+/*
+ * 桌面端是「标签 132px + 控件」两列，手机上标签列会把控件压得很窄，
+ * 这里直接改成上下堆叠：标签一行、控件一行，控件占满宽度。
+ */
+@media screen and (max-width: 782px) {
+    .as-meta-table,
+    .as-meta-table tbody,
+    .as-meta-table tr,
+    .as-meta-table th,
+    .as-meta-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .as-meta-table {
+        table-layout: auto;
+    }
+
+    .as-meta-table tr {
+        margin-bottom: 14px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f0f0f1;
+    }
+
+    .as-meta-table tr:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .as-meta-table th,
+    .as-meta-table th label {
+        width: auto;
+        padding: 0 0 6px;
+    }
+
+    .as-meta-table td {
+        padding: 0;
+    }
+
+    /* 控件占满 */
+    .as-meta-table td input[type="text"],
+    .as-meta-table td input[type="url"],
+    .as-meta-table td input[type="number"],
+    .as-meta-table td select,
+    .as-meta-table td textarea {
+        width: 100%;
+    }
+
+    /* 整行的 checkbox 在堆叠布局里自然独占一行，不用管 colspan */
+    .as-meta-row-full td {
+        padding: 0;
+    }
+
+    /* 分类多选框：手机上高度收一点，避免占满整屏 */
+    .as-meta-cats {
+        max-height: 150px;
+    }
+
+    /* 逐行编辑器的删除按钮加大，方便手指点 */
+    .as-rp-del {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+
+    .as-rp-add {
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+}
+
+/* ==========================================
+   5. 小程序商城后台页（.wrap 里的宽表格）
+   ========================================== */
+
+/*
+ * 商城订单/商品/用户/优惠券几个页面用的是普通 <table>，列很多。
+ * 同样让它们横向滚动，并让操作按钮可点。
+ */
+@media screen and (max-width: 782px) {
+    /*
+     * ⚠️ 必须排除 .form-table —— 它是「设置」类页面的表单（标签+控件两列），
+     * 走的是**上下堆叠**（见本文件末尾第 5 节），不是横向滚动。
+     * 之前漏了它，导致这条的 `white-space: nowrap` 落到 table.form-table 的 td 上，
+     * 里面的 <p class="description"> 继承后**整段文字不换行、右侧被截断**
+     * （实测：元素宽 368px、内容 412px，直接溢出看不到后半句）。
+     */
+    .wrap table:not(.as-meta-table):not(.form-table) {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .wrap table:not(.as-meta-table):not(.form-table) th,
+    .wrap table:not(.as-meta-table):not(.form-table) td {
+        padding: 10px 12px;
+        white-space: nowrap;
+    }
+
+    /* 表头固定，方便对照列 */
+    .wrap table:not(.as-meta-table):not(.form-table) thead th {
+        background: #f6f7f7;
+        font-weight: 600;
+    }
+
+    /* 表格里的 details 折叠表单（改地址等）在手机上默认展开更好用 */
+    .wrap details {
+        margin: 4px 0;
+    }
+
+    .wrap summary {
+        padding: 8px 10px;
+        background: #f0f6fc;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .wrap input[type="text"],
+    .wrap input[type="number"],
+    .wrap select {
+        min-width: 200px;
+    }
+}
+
+/* ==========================================
+   6. 表单两列表 → 单列
+   ========================================== */
+
+/*
+ * WP 的 form-table（通用设置页）默认两列，标签固定宽。
+ * 手机上改成单列，标签在上、控件在下。
+ */
+@media screen and (max-width: 782px) {
+    .wp-core-ui .form-table th,
+    .wp-core-ui .form-table td {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 6px 0;
+    }
+
+    .wp-core-ui .form-table th {
+        padding-bottom: 2px;
+    }
+
+    .wp-core-ui .form-table tr {
+        display: block;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f0f0f1;
+    }
+
+    .wp-core-ui .form-table tr:last-child {
+        border-bottom: none;
+    }
+
+    .wp-core-ui .form-table .description {
+        margin-top: 4px;
+    }
+}
+
+/* ==========================================
+   7. 顶部工具条 / 菜单 / 保存条
+   ========================================== */
+
+/* 手机上顶部 admin bar 很高，别让它挡内容 */
+#wpadminbar {
+    height: 46px;
+}
+
+#wpadminbar .ab-item,
+#wpadminbar .ab-item a,
+#wpadminbar > #wp-toolbar > #wp-toolbar-item {
+    line-height: 46px;
+}
+
+/* 底部固定的「保存/发布」区域 */
+#submitdiv,
+#minor-publishing-actions,
+#misc-publishing-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+#submitdiv .button-primary,
+#publishing-action .button-primary {
+    flex: 1 1 100%;
+    text-align: center;
+}
+
+#minor-publishing-actions,
+#misc-publishing-actions {
+    justify-content: flex-start;
+}
+
+#delete-post {
+    margin-top: 8px;
+}
+
+/* 页脚折叠条（WP 的 footer 在窄屏是固定的） */
+#wpfooter {
+    position: static;
+    padding: 10px 0;
+}
+
+/* 通知条别把内容顶没 */
+.notice,
+div.updated,
+div.error {
+    margin: 12px 0;
+    padding: 10px 12px;
+}
+
+/* ==========================================
+   8. 编辑器 / 媒体 / 侧栏
+   ========================================== */
+
+@media screen and (max-width: 782px) {
+    /* Gutenberg 顶栏 */
+    .edit-post-header__settings,
+    .editor-header {
+        flex-wrap: wrap;
+    }
+
+    /* 右侧设置栏在窄屏是抽屉，body 不该留白。
+       v2.87.67：加 border-box —— content-box 下 100% 宽 + padding 会多出 16px，
+       编辑页整页横向溢出（实测 402 / 390，「可视化 / 代码」按钮被裁）。 */
+    .wp-editor-tools,
+    .edit-post-layout__metaboxes-area.is-psh {
+        padding: 8px;
+        box-sizing: border-box;
+    }
+
+    /* 分类/标签等侧栏面板 */
+    .postbox .inside,
+    .postbox .edit-actions {
+        margin: 0;
+    }
+
+    /* 媒体库网格 */
+    .attachments .attachment {
+        width: 50%;
+    }
+
+    /* 仪表盘小工具 */
+    #dashboard-widgets .postbox {
+        margin-bottom: 12px;
+    }
+}
+
+/* ==========================================
+   9. 打印 / 减少动效
+   ========================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+    }
+}
+/* ==========================================
+   5. 设置页表单（table.form-table）：同样改成上下堆叠
+   ========================================== */
+
+/*
+ * WP 所有「设置」类页面都用 table.form-table（本主题的
+ * 「网站设置」「小程序商城」「内容创作 → AI 设置」都是）。
+ * 默认是「标签列 + 控件列」两列，窄屏下标签列（通常 200px）会把控件压扁，
+ * 长一点的域名/提示词根本没法看。这里跟 .as-meta-table 一样改成上下堆叠。
+ *
+ * 注意：只处理「屏幕」和宽度，不动桌面端。
+ */
+@media screen and (max-width: 782px) {
+    .form-table,
+    .form-table tbody,
+    .form-table tr,
+    .form-table th,
+    .form-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .form-table tr {
+        margin-bottom: 16px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid #f0f0f1;
+    }
+
+    .form-table tr:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    /* 标签在下，不要留 WP 默认的 padding */
+    .form-table th,
+    .form-table th label {
+        width: auto;
+        padding: 0 0 8px;
+        font-size: 15px;
+    }
+
+    .form-table td {
+        padding: 0;
+        /* 复位：防上面「宽表格横向滚动」那条的 nowrap 漏进来 */
+        white-space: normal;
+    }
+
+    /* 控件一律占满宽度，避免「输入框一半、右边空一半」 */
+    .form-table td input[type="text"],
+    .form-table td input[type="url"],
+    .form-table td input[type="email"],
+    .form-table td input[type="password"],
+    .form-table td input[type="number"],
+    .form-table td input[type="search"],
+    .form-table td select,
+    .form-table td textarea {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 6px;
+    }
+
+    /* 说明文字别太挤 */
+    .form-table td .description {
+        margin: 4px 0 0;
+        line-height: 1.6;
+    }
+
+    /*
+     * 代码片段（常量名之类）在窄屏容易撑破。
+     * ⚠️ 用 overflow-wrap 而不是 word-break:break-all —— 后者会把
+     *    `AS_AI_KEY_KIMI` 从中间劈成「AS_AI / _KEY_KIMI」，很难读。
+     *    overflow-wrap 只在整块实在放不下时才断。
+     */
+    .form-table code,
+    .description code {
+        overflow-wrap: anywhere;
+        word-break: normal;
+    }
+}
+
+/* ==========================================
+   6. 宽屏下钳住 #wpbody-content（消除几像素的横向滚动）
+   ========================================== */
+
+/*
+ * 实测（1440px 宽）：内容较短的页面（如「内容创作」）右边会多出一条横向滚动条。
+ * 原因是 WP 布局下 #wpbody-content 的宽度没有随「有无竖向滚动条」调整：
+ *   · 内容长（有竖向滚动条）→ 内容区宽 1261px，正好
+ *   · 内容短（无竖向滚动条）→ 内容区宽 1276px，比视口多出十几像素
+ * 老页面因为内容长，一直没暴露；「内容创作」两个页面内容少，就露出来了。
+ *
+ * 这里钳一下：不改变任何布局，只在真的装不下时允许内部滚动，
+ * 避免整个页面出现无意义的横向滚动条。
+ */
+.wp-admin #wpbody-content {
+    max-width: 100%;
+    box-sizing: border-box;
+}

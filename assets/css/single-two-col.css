@@ -1,0 +1,322 @@
+/* ============================================================================
+ * 商品详情页 · 电脑端「京东式两栏」（v2.87.118）
+ * ----------------------------------------------------------------------------
+ * 目标（用户 2026-11-09 确认；v2.87.112：参数平铺、不滑动、不要标题行）：
+ *   · 整站容器宽度不变（1200px / 内容 1160px）。
+ *   · 左栏 = 竖向图集 + 优缺点/推荐理由 + 商品详情长图；
+ *     右栏 = 标题 → 价格/券/会员价 → 规格 → 三个按钮，整栏吸顶。
+ *   · 右栏「上下贴边」：顶部贴**菜单（页头）下沿**（页头 65px，实测高度，
+ *     JS 运行时读取，页头高度变化自动跟随），底部贴浏览器下沿，
+ *     按钮行贴住视口底部（京东商品页的紧凑感）。
+ *   · 规格表：品牌 / 品类 / 效果类型 / 规格 的标签排一行、对应值排下一行；
+ *     其余参数保持放大后的字号/行距，**平铺展开、不限高、不加滚动条**
+ *     （v2.87.112 按用户要求取消 111 的「商品参数 · 共 N 项」标题行、
+ *      行距均分与卡内滚动；参数卡只用 flex 吃掉右栏底部空白，不裁切内容）。
+ *   · 右栏高度改为 min-height（JS 按当前 top 写）：内容不足时撑到贴边，
+ *     内容超高时右栏自然变高、随整页滚动浏览，参数一项都不会被藏起来。
+ *   · 出现「相关推荐 / 相关文章」时右栏不再吸顶，跟着页面一起滚走。
+ *   · 手机端（≤991px）完全不用变：本文件只在 ≥992px 生效；PHP 只多打一个
+ *     class（.as-spec-row-key），手机端没有任何规则读它。
+ *
+ * 实现要点（改动前必读）：
+ *   1) 原结构是 `.as-single-top`（440/680 两列）+ 下面全宽的 extra / desc / 相关推荐。
+ *      用 `display:contents` 把 .as-single-top 的盒子拆掉，让 .as-single-img /
+ *      .as-single-info 直接成为外层 .as-single grid 的子项，才能跨行排布。
+ *      ⚠️ display:contents 后 .as-single-top 的 background / padding / border 全失效，
+ *      卡片底色与圆角要分别补给 .as-single-img 和 .as-single-info。
+ *   2) `align-self:start` 是 sticky 生效的必要条件：grid 默认 stretch 会把右栏拉成
+ *      和左栏一样高（详情长图展开后上万像素），sticky 就完全失效。
+ *   3) 停止吸顶不靠 grid 边界：实测 Chrome 对 sticky 网格项的约束矩形是整个 grid
+ *      容器。落地由 single-two-col.js 动态调 top 完成，同时按卡片当前 top 写
+ *      min-height，保证底部始终贴住视口下沿（首屏还没吸顶时也不越界）。
+ *      右栏比视口还高时改用「底部对齐 sticky」（top 取负）：先随页面滚动把
+ *      参数逐行露出来，底部贴住视口下沿后再粘住，按钮仍钉在浏览器下沿。
+ *   4) 本文件最后加载（deps 含 as-style-refresh），选择器带 body 前缀压过旧规则。
+ *      配色一律走变量，style-refresh.css 仍保持纯配色层。
+ * ========================================================================== */
+
+@media (min-width: 992px) {
+
+    /* ---- 1. 外层：面包屑独占一行，下面两栏 ------------------------------ */
+    body .as-single.as-container {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 396px);
+        column-gap: 24px;
+        align-items: start;
+    }
+    /* 1200 容器 → 内容 1160 → 左 740 + 24 + 右 396；窄一点的桌面自动收左栏 */
+    body .as-single > .as-breadcrumb {
+        grid-column: 1 / -1;
+        grid-row: 1;
+    }
+
+    /* ---- 2. 拆掉原「上半部两列」的盒子 ---------------------------------- */
+    body .as-single > .as-single-top {
+        display: contents;
+    }
+
+    /* ---- 3. 左栏：图集（缩略图竖排） ------------------------------------ */
+    body .as-single > .as-single-top > .as-single-img {
+        grid-column: 1;
+        grid-row: 2;
+        /* 覆盖 main.css「主图自己 sticky top:88」——现在吸顶的是右栏 */
+        position: static;
+        align-self: start;
+        /* 原 .as-single-top 的卡片外观，拆开后补回到图集这一块 */
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        padding: 16px;
+    }
+    /* 竖排：76px 缩略图列 + 右侧主图，主图仍是 1:1 白底 */
+    body .as-single .as-single-img .as-gallery {
+        display: grid;
+        grid-template-columns: 76px minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+    }
+    body .as-single .as-gallery-stage {
+        grid-column: 2;
+        grid-row: 1;
+    }
+    body .as-single .as-gallery-thumbs {
+        grid-column: 1;
+        grid-row: 1;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        gap: 10px;
+        margin: 0;
+        overflow: visible;
+    }
+    body .as-single .as-gallery-thumb-item {
+        width: 76px;
+        flex: 0 0 auto;
+    }
+    /* 原 `.as-single-img img` 的 1px 描边会给每张缩略图都加边，竖排后很碎 */
+    body .as-single .as-single-img .as-gallery img {
+        border: 0;
+        border-radius: 0;
+    }
+
+    /* ---- 4. 右栏：上下贴边的吸顶信息卡 ---------------------------------- */
+    body .as-single > .as-single-top > .as-single-info {
+        grid-column: 2;
+        grid-row: 2 / span 3;
+        position: sticky;
+        /* 页头 .as-header 是 sticky（64px 高 + 1px 边框 = 65px），
+           右栏吸顶就贴在**菜单下沿**，不再留 24px 空隙；
+           JS 会用实测页头高度覆盖这个值（页头高度变了也自动跟随）。 */
+        top: 65px;
+        align-self: start;         /* 🔴 没有它 sticky 直接失效 */
+        /* 65px 顶 + 8px 底 = 73px：右栏**锁定**成视口可用高（JS 按当前 top 写
+           height：首屏 top≈136 → 756，吸顶 65 → 827），于是
+           「顶部贴菜单下沿 + 底部按钮贴浏览器下沿」恒成立 —— 京东商品详情就是这样。
+           栏内：标题/价格在上、参数区占中间（自己滚）、三按钮在底。 */
+        /* 🔴 不要写 min-height：它会比 JS 写的 height 更大，把卡片撑出视口
+           （首屏底部溢出、按钮被切）。高度只由 JS 的 inline height 控制。 */
+        height: calc(100vh - 73px);
+        max-height: none;
+        display: flex;
+        flex-direction: column;
+        padding: 16px 18px 0;
+        overflow: hidden;
+        background: var(--surface);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+    }
+
+    /* ---- 4.1 上半部整体收紧（腾出空间给贴底按钮） ------------------------ */
+    body .as-single .as-single-info > h1 {
+        margin: 0 0 7px;
+        font-size: 21px;
+        line-height: 1.35;
+    }
+    body .as-single .as-single-info > .as-single-meta {
+        margin-bottom: 7px;
+        gap: 5px;
+    }
+    body .as-single .as-single-info > .as-single-meta .as-tag {
+        padding: 2px 8px;
+        font-size: 11px;
+    }
+    body .as-single .as-single-info > .as-single-price { margin: 4px 0 0; }
+    body .as-single .as-single-info > .as-single-price .as-price-now { font-size: 25px; }
+    body .as-single .as-single-info > .as-single-promos { gap: 5px; margin-top: 6px; }
+    body .as-single .as-single-info > .as-single-promos .as-promo { padding: 6px 10px; gap: 6px; }
+    body .as-single .as-single-info > .as-vip-box { margin-top: 7px; padding: 6px 10px; gap: 6px; }
+
+    /* ---- 4.2 商品参数卡 · 平铺版（v2.87.112） ----------------------------
+       v2.87.118 定稿（用户：「上下都要吸顶吸顶，就跟京东的商品详情一个道理」）：
+         · 右栏**锁定**成视口可用高 → 顶部贴菜单下沿、底部三按钮贴浏览器下沿，
+           恒成立（京东同款）；
+         · 参数区占满右栏中部（flex:1），行距用 auto 行轨自动均分铺满；
+         · 参数多到装不下时才在**栏内**滚动（细 6px 滚动条），不是整页滚动；
+         · 没有「商品参数 · 共 N 项」标题行（连带模板里的 data-count 属性已删）；
+         · 字号 12.5~13.5px、分隔线保留。
+       ⚠️ 三个坑（改前必读）：
+         1) dt/dd 的 UA 默认 margin-inline-start 必须显式清零，否则值被挤成竖排；
+         2) .as-single-buy 不能用 margin-top:auto —— auto margin 会先抢走剩余
+            空间，参数卡 flex:1 就吃不到空白；无参数商品用 :has() 兜底推到底；
+         3) 关键四项行必须显式 grid-template-rows: min-content，其余行
+            grid-auto-rows: auto（卡片被 flex 拉高时自动均分铺满；内容超高时
+            轨道退回内容高度、卡片自然变高）。🔴 别写 align-content: safe
+            space-around —— safe 不能配 space-*，整条声明会被 Chrome 丢弃；
+            也别给卡片限高或加 overflow，那又变成用户不要的「滑动」了。
+       .as-spec-row-key 由 single-plm_product.php 按 label 白名单打标，
+       字段缺失时列数自动收缩，不会把长文本误塞进第 4 列。 */
+    body .as-single .as-single-info .as-spec-list-top {
+        flex: 1 1 auto;              /* 占满右栏中部（标题与按钮之间） */
+        min-height: 0;
+        margin: 10px 0 0;
+        padding: 10px 12px 4px;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-rows: min-content;   /* 关键四项行不拉伸 */
+        grid-auto-rows: auto;              /* 属性行平铺：卡片有富余高度时自动均分铺满 */
+        gap: 0;
+        /* 京东同款：参数多到装不下时**在栏内滚动**（不是整页滚动）。
+           常见商品 5 项参数在 900 高窗口能全放下 → 根本不会出现滚动条。 */
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, .22) transparent;
+        background: var(--surface-2);
+        border: 1px solid var(--border-light);
+        border-radius: 10px;
+    }
+    body .as-single .as-single-info .as-spec-list-top::-webkit-scrollbar { width: 6px; }
+    body .as-single .as-single-info .as-spec-list-top::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, .22);
+        border-radius: 6px;
+    }
+    /* 关键四项：标签一行 + 值一行；相邻兄弟选择器让最后一列不画竖线
+       v2.87.112：标题行已删，四项从 grid-row 2 挪回 1 */
+    body .as-single .as-single-info .as-spec-list-top > .as-spec-row-key {
+        grid-row: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 9px;
+        padding: 14px 10px 15px;
+        border-radius: 0;
+    }
+    body .as-single .as-single-info .as-spec-list-top > .as-spec-row-key:first-child {
+        padding-left: 0;
+    }
+    body .as-single .as-single-info .as-spec-list-top > .as-spec-row-key + .as-spec-row-key {
+        border-left: 1px solid var(--border-light);
+    }
+    body .as-single .as-single-info .as-spec-list-top > .as-spec-row-key dt,
+    body .as-single .as-single-info .as-spec-list-top > .as-spec-row-key dd {
+        flex: none;
+        width: auto;
+        margin: 0;
+        white-space: normal;
+        word-break: break-word;
+    }
+    body .as-single .as-single-info .as-spec-list-top > .as-spec-row-key dt {
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--text-muted);
+    }
+    body .as-single .as-single-info .as-spec-list-top > .as-spec-row-key dd {
+        min-height: 34px;
+        font-size: 13px;
+        line-height: 1.5;
+        font-weight: 600;
+        color: var(--text);
+    }
+    /* 其余参数（含自定义属性）：整行通栏、字号放开、细虚线分隔 */
+    body .as-single .as-single-info .as-spec-list-top > .as-spec-row:not(.as-spec-row-key) {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: 76px minmax(0, 1fr);
+        gap: 12px;
+        padding: 8px 0;
+        border-bottom: 1px dashed var(--border-light);
+    }
+    body .as-single .as-single-info .as-spec-list-top > .as-spec-row:not(.as-spec-row-key):last-child {
+        border-bottom: 0;
+    }
+    body .as-single .as-single-info .as-spec-list-top > .as-spec-row:not(.as-spec-row-key) dt {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--text-muted);
+    }
+    body .as-single .as-single-info .as-spec-list-top > .as-spec-row:not(.as-spec-row-key) dd {
+        min-width: 0;
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.6;
+        word-break: break-word;
+        color: var(--text);
+    }
+
+    /* ---- 4.3 贴底购买区：按钮贴浏览器下沿 --------------------------------
+       v2.87.112：模板已删掉「本站可直接下单付款…」那句说明，这里只剩按钮行。
+       参数卡 flex:1 自己吃掉剩余高度，所以不用 margin-top:auto
+       （auto margin 会先抢走剩余空间，参数卡就拿不到高度）。
+       商品完全没有参数时，用 :has() 兜底把购买区重新推到底部。
+       position:sticky;bottom:0 保证右栏比视口还高、整页滚动时按钮仍钉在下沿。 */
+    body .as-single .as-single-info > .as-single-buy {
+        margin: 0 -18px 0;
+        padding: 8px 18px 10px;
+        display: flex;
+        flex-direction: column;
+        flex: 0 0 auto;
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
+        background: var(--surface-2);
+        border-top: 1px solid var(--border-light);
+    }
+    body .as-single .as-single-info:not(:has(.as-spec-list-top)) > .as-single-buy {
+        margin-top: auto;
+    }
+    /* 上部（标题/价格/券/会员价）打包后的容器：flow 模式下单独吸顶 */
+    body .as-single .as-single-info > .as-single-info-top {
+        margin-bottom: 2px;
+    }
+    body .as-single .as-single-info > .as-single-buy > .as-buy-note {
+        order: -1;                 /* 原本在按钮下面，这里提到上面 */
+        margin: 0 0 7px;
+        font-size: 11px;
+        line-height: 1.45;
+        color: var(--text-muted);
+    }
+    body .as-single .as-single-info > .as-single-buy > .as-shop-buy-inline {
+        order: 0;
+        gap: 8px;
+        margin-bottom: 0;
+        background: transparent;
+        border-top: 0;
+    }
+    /* 三个按钮必须保持同一行（用户明确要求，不允许换行） */
+    body .as-single .as-single-info .as-single-buy .as-shop-buy .as-buy-btn,
+    body .as-single .as-single-info .as-single-buy .as-shop-buy .as-btn-shop-ghost,
+    body .as-single .as-single-info .as-single-buy .as-shop-buy .as-btn-shop-primary {
+        height: 44px;
+        padding: 0 6px;
+        font-size: 13.5px;
+    }
+    /* 手机端那套吸底版在桌面不显示（沿用 web-shop.css，这里显式兜底） */
+    body .as-single .as-single-info > .as-single-buy > .as-shop-buy-sticky-wrap {
+        display: none;
+    }
+
+    /* ---- 5. 左栏其余内容 ------------------------------------------------ */
+    body .as-single > .as-product-extra {
+        grid-column: 1;
+        grid-row: 3;
+    }
+    body .as-single > .as-single-desc {
+        grid-column: 1;
+        grid-row: 4;
+    }
+    /* 相关推荐 / 相关文章：回到全宽，且在右栏 sticky 约束范围之外 */
+    body .as-single > .as-section {
+        grid-column: 1 / -1;
+    }
+}

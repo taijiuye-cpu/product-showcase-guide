@@ -1,0 +1,2038 @@
+/* ============================================================================
+ * 全站深色视觉 · 2026-11-08（按用户确认的截图：深黑底 + 白字 + 白胶囊 + 圆角卡）
+ * ----------------------------------------------------------------------------
+ * 纯样式层：不改任何 HTML / PHP 逻辑，不动取数、价格、券、会员价、购物车、
+ * 支付、订单、REST。
+ *
+ * 做法分两层：
+ *   1) 变量层：覆盖 --bg / --surface / --text / --border 等 →
+ *      全站 90% 的规则（都用变量）自动变深色，改动面最小。
+ *   2) 定向层：少数写死浅色的模块（表格、输入框、券、结算、正文代码块等）
+ *      逐个点名覆盖。
+ *
+ * 对比度（WCAG 2.1，实测见交付说明）：
+ *   正文 #eef1f5 / #0d0f15 = 16.9:1
+ *   次级 #b8c0cc / #0d0f15 = 9.6:1
+ *   弱   #8e96a3 / #0d0f15 = 5.3:1
+ *   价格 #ff6fa5 / #14171e = 6.0:1
+ *   白按钮 #17181c / #fff   = 17.7:1
+ * ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+ * 1. 变量层
+ * ------------------------------------------------------------------------- */
+body {
+/* 底色 / 面板 */
+    --bg: #0d0f15;
+    --surface: #14171e;
+    --surface-2: #1a1e26;
+    /* 文字 */
+    --text: #eef1f5;
+    --text-sub: #b8c0cc;
+    --text-muted: #8e96a3;
+    /* 线 */
+    --border: rgba(255, 255, 255, .12);
+    --border-light: rgba(255, 255, 255, .07);
+    --gold-line: rgba(255, 255, 255, .1);
+    /* 阅读区 */
+    --reading-bg: #14171e;
+    --reading-text: #eef1f5;
+    --reading-text-2: #b8c0cc;
+    /* 主色：实心按钮底保持玫红（白字 5.9:1），深底上的强调文字用提亮版 */
+    --main-light: rgba(194, 24, 91, .18);
+    --price: #ff6fa5;
+    --price-dark: #ff94bb;
+    --rf-pink: #ff6fa5;
+    --rf-blue: #7ea6ff;
+    --rf-blue-soft: rgba(47, 111, 235, .18);
+    --rf-ink: #eef1f5;
+    --rf-ink-2: #b8c0cc;
+    /* 圆角 */
+    --radius: 10px;
+    --radius-sm: 8px;
+    /* 阴影：深底上靠"提亮 + 描边"分层，阴影只做轻微下沉 */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+    --shadow-md: 0 12px 32px rgba(0, 0, 0, .5);
+    --shadow-main: 0 10px 28px rgba(194, 24, 91, .28);
+    background: var(--bg);
+    color: var(--text);
+}
+body .as-main,
+body .site,
+body #wrapper {
+background: var(--bg); 
+}
+
+/* ---------------------------------------------------------------------------
+ * 2. 页头 / 导航 / 搜索 / 购物车入口
+ * ------------------------------------------------------------------------- */
+/* ⚠️ 页头不能加 backdrop-filter：
+ *    它会创建 containing block，里面的 .as-nav（手机端 position:fixed）会改成相对页头定位，
+ *    面板被压成一条、还被正文盖住（v2.87.81 踩过的坑）。改用不透明底色。 */
+body .as-header {
+    background: #0d0f15;
+    border-bottom: 1px solid var(--border);
+}
+/* 全站容器统一 1200：
+ *   基础 main.css 是 1080，橱窗皮肤（style-showcase.css）只在首页/商品列表页加载时把它放宽到 1200，
+ *   于是「首页 1200 / 内页 1080」→ 导航、页脚、内容左右边缘逐页跳 60px。
+ *   这里把全站锁成同一个 1200（纯容器宽度，不动任何模块内部排版）。 */
+body .as-container {
+    max-width: 1200px;
+}
+/* Logo 是"透明底 + 深色字"素材 → 深色页头上必须垫白底，否则字看不见 */
+/* Logo 素材是「透明底 + 深色字 + 玫红心」→ 深色页头上垫白底很突兀。
+ * 这里用 invert + hue-rotate(180deg) 反色：近黑文字变白、玫红心形色相不变，
+ * 背景透明，直接融入页头底色（用户 2026-11-09）。
+ * ⚠️ 页脚有同样素材，一并处理，见下方页脚规则。 */
+body .as-logo img {
+    background: transparent;
+    box-shadow: none;
+    filter: invert(1) hue-rotate(180deg);
+}
+body .as-nav a,
+body .as-nav > li > a {
+color: var(--text); 
+}
+body .as-nav a:hover {
+color: var(--rf-pink); 
+}
+body .as-header-search input,
+body .as-searchform input {
+background: rgba(255, 255, 255, .06);
+    border-color: var(--border);
+    color: var(--text);
+}
+body .as-header-search input::placeholder,
+body .as-searchform input::placeholder {
+color: var(--text-muted); 
+}
+body .as-cart-entry,
+body .as-member-entry {
+color: var(--text-sub); 
+}
+body .as-cart-entry:hover,
+body .as-member-entry:hover {
+color: var(--rf-pink); 
+}
+body .as-nav-toggle {
+border-color: var(--border); 
+}
+body .as-nav-toggle span,
+body .as-nav-toggle span::before,
+body .as-nav-toggle span::after {
+background: var(--text); 
+}
+
+/* 手机端展开的导航面板 */
+@media (max-width: 900px) {
+    body .as-nav {
+background: #10131a;
+        border-top: 1px solid var(--border);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, .55);
+}
+    body .as-nav a {
+border-bottom: 1px solid var(--border-light); 
+}
+}
+
+/* ---------------------------------------------------------------------------
+ * 3. 首页深色首屏（截图那块：黑底 + 蓝/玫红光斑 + 白字 + 白胶囊按钮）
+ * ------------------------------------------------------------------------- */
+body .as-sc-hero {
+background: #0d0f15;
+}
+body .as-sc-hero:after {
+right: -180px;
+    top: -200px;
+    width: 680px;
+    height: 680px;
+    background: radial-gradient(circle, rgba(47, 111, 235, .42), rgba(47, 111, 235, 0) 64%);
+    filter: blur(34px);
+}
+body .as-sc-hero:before {
+content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -320px;
+    width: 1100px;
+    height: 640px;
+    margin-left: -550px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(150, 40, 215, .24), rgba(194, 24, 91, .16) 46%, rgba(194, 24, 91, 0) 78%);
+    filter: blur(56px);
+    /* 下缘渐隐：光斑贴到区块底边时必须先淡出，否则 overflow:hidden 会切出一条硬边 */
+    -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, .45) 32%, #000 74%);
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, .45) 32%, #000 74%);
+    pointer-events: none;
+}
+body .as-sc-hero-copy h1 {
+color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans SC",
+                 "Microsoft YaHei", sans-serif;
+    font-weight: 900;
+}
+body .as-sc-hero-desc {
+color: rgba(255, 255, 255, .78); 
+}
+body .as-sc-eyebrow {
+color: rgba(255, 255, 255, .88); 
+}
+body .as-sc-hero .as-sc-btn.is-main {
+background: #fff;
+    color: #17181c;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .38);
+}
+body .as-sc-hero .as-sc-btn.is-main:hover {
+background: #f1f2f4; 
+}
+body .as-sc-hero .as-sc-btn:not(.is-main):not(.is-light) {
+background: rgba(255, 255, 255, .02);
+    color: #fff;
+    border-color: rgba(255, 255, 255, .46);
+}
+body .as-sc-hero .as-sc-btn:not(.is-main):not(.is-light):hover {
+background: rgba(255, 255, 255, .12);
+    border-color: rgba(255, 255, 255, .7);
+}
+body .as-sc-stats {
+border-top-color: rgba(255, 255, 255, .18); 
+}
+body .as-sc-stats b {
+font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-weight: 900;
+    color: #fff;
+}
+body .as-sc-stats i {
+color: rgba(255, 255, 255, .7); 
+}
+/* 商品拼贴：白框浮在深底上（截图同款） */
+/* 首屏商品拼贴：基础无边框、圆角 18px → 白框用 inset 阴影画，不动尺寸与圆角 */
+body .as-sc-photo {
+    box-shadow: 0 26px 64px rgba(0, 0, 0, .6), inset 0 0 0 1px rgba(255, 255, 255, .1);
+}
+body .as-sc-visual-tag {
+background: rgba(255, 255, 255, .94);
+    border-color: rgba(255, 255, 255, .6);
+    color: #17181c;
+}
+body .as-sc-alt {
+background: #10131a; 
+}
+body .as-sc-kicker {
+color: var(--rf-blue);
+    font-weight: 800;
+}
+body .as-sc-kicker.is-light {
+color: rgba(255, 255, 255, .82); 
+}
+body .as-sc-title {
+font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-weight: 800;
+    color: var(--text);
+}
+body .as-sc-sub,
+body .as-sc-head p {
+color: var(--text-sub); 
+}
+body .as-sc-more {
+color: var(--rf-blue); 
+}
+body .as-sc-more:hover {
+color: #a8c2ff; 
+}
+
+/* ---------------------------------------------------------------------------
+ * 5. 卡片（全站：首页橱窗卡 / 列表卡 / 文章卡）
+ *    图片区保持白底 —— 与截图一致："白框浮在深底上"，商品图不被深色压暗
+ * ------------------------------------------------------------------------- */
+/* ⚠️ 只改颜色，不碰 border 宽度 / 圆角 / transform：
+ *    .as-card / .as-sc-card / .as-flash-card 基础就有 1px 边框 → 只换 border-color；
+ *    .as-post-card 基础**没有**边框 → 用 inset 阴影画，写 border 会让卡片宽高各 +2px */
+body .as-card,
+body .as-sc-card,
+body .as-flash-card {
+    background: var(--surface);
+    border-color: var(--border);
+}
+body .as-post-card {
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--border);
+}
+body .as-card:hover,
+body .as-sc-card:hover,
+body .as-flash-card:hover {
+    border-color: rgba(255, 255, 255, .22);
+}
+body .as-post-card:hover {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22), 0 14px 34px rgba(0, 0, 0, .5);
+}
+body .as-card-img,
+body .as-sc-card-img,
+body .as-flash-img {
+background: #fff; 
+}
+body .as-card-title,
+body .as-card-title a,
+body .as-sc-card-title,
+body .as-sc-card-title a,
+body .as-post-title,
+body .as-post-title a {
+color: var(--text); font-weight: 700; 
+}
+body .as-card-title a:hover,
+body .as-sc-card-title a:hover,
+body .as-post-title a:hover {
+color: var(--rf-pink); 
+}
+body .as-card-sales,
+body .as-sc-card-sales,
+body .as-flash-sales {
+color: var(--text-muted); 
+}
+
+/* 价格 */
+body .as-price-now {
+color: var(--price); font-size: 19px; font-weight: 800; letter-spacing: -.01em; 
+}
+body .as-price-old,
+body .as-sc-card-price s {
+color: #98a0ad; font-size: 12px; 
+}
+
+/* 券 / 会员 / 促销小胶囊 */
+body .as-card-coupon {
+background: rgba(255, 111, 165, .12);
+    border-color: rgba(255, 111, 165, .35);
+    color: var(--rf-pink);
+    border-radius: 999px;
+}
+body .as-card .as-vip-hint,
+body .as-sc-card .as-vip-hint,
+body .as-flash-vip,
+body .as-card-promo {
+background: rgba(255, 255, 255, .07);
+    border-color: var(--border);
+    color: var(--text-sub);
+    border-radius: 999px;
+}
+body .as-card-promo-cd {
+color: var(--text-muted); 
+}
+
+/* 购买按钮：只改配色。
+ * ⚠️ 基础 .as-buy-btn 没有 border —— 这里用 inset 阴影画描边，
+ *    写 border 会让按钮宽高各 +2px（就是"按钮尺寸被改了"） */
+body .as-buy-btn {
+    background: rgba(255, 255, 255, .06);
+    color: var(--text);
+    box-shadow: inset 0 0 0 1px var(--border);
+}
+body .as-buy-btn:hover {
+    background: var(--main);
+    color: var(--on-gold);
+    box-shadow: inset 0 0 0 1px var(--main);
+}
+body .as-buy-note {
+color: var(--text-muted); 
+}
+
+/* ---------------------------------------------------------------------------
+ * 6. 列表 / 分类 / 搜索：页头、筛选胶囊、侧栏、分页
+ * ------------------------------------------------------------------------- */
+body .as-sc-list-head {
+background: #10131a;
+    border-bottom: 1px solid var(--border);
+}
+body .as-sc-list-head:after {
+display: none; 
+}
+body .as-sc-list-head h1 {
+font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-weight: 800;
+    color: var(--text);
+}
+body .as-sc-list-head p {
+color: var(--text-sub); 
+}
+body .as-sc-chip {
+background: rgba(255, 255, 255, .05);
+    border-color: var(--border);
+    color: var(--text-sub);
+}
+body .as-sc-chip:hover {
+border-color: rgba(255, 255, 255, .3); color: var(--text); 
+}
+body .as-sc-chip.is-on {
+background: var(--main);
+    border-color: var(--main);
+    color: #fff;
+}
+body .as-sc-side-box {
+background: var(--surface);
+    border-color: var(--border);
+    border-radius: 12px;
+}
+body .as-sc-side-box h3,
+body .as-sc-side-title {
+color: var(--text); 
+}
+body .as-sc-side-item {
+color: var(--text-sub); 
+}
+body .as-sc-side-item:hover {
+background: rgba(255, 255, 255, .05); color: var(--text); 
+}
+body .as-sc-side-item i {
+color: var(--text-muted); 
+}
+body .as-sc-side-item.is-on {
+background: rgba(194, 24, 91, .18); color: var(--rf-pink); 
+}
+body .as-archive-head,
+body .as-blog-header {
+background: #10131a; 
+}
+body .as-breadcrumb,
+body .as-breadcrumb a {
+color: var(--text-muted); 
+}
+body .as-breadcrumb a:hover {
+color: var(--rf-pink); 
+}
+body .as-search-count {
+color: var(--text-muted); 
+}
+body .as-empty {
+color: var(--text-muted); 
+}
+
+/* 分页 */
+body .as-pager a,
+body .as-pager span,
+body .page-numbers {
+background: rgba(255, 255, 255, .05);
+    border-color: var(--border);
+    color: var(--text-sub);
+    border-radius: 8px;
+}
+body .as-pager .current,
+body .page-numbers.current {
+background: var(--main);
+    border-color: var(--main);
+    color: #fff;
+}
+body .as-pager a:hover {
+border-color: rgba(255, 255, 255, .3); color: var(--text); 
+}
+
+/* ---------------------------------------------------------------------------
+ * 7. 商品详情：图库、信息卡、参数表、券、底部购买条
+ * ------------------------------------------------------------------------- */
+body .as-single-top,
+body .as-single-card,
+body .as-panel {
+background: var(--surface);
+    border-color: var(--border);
+    border-radius: 12px;
+}
+body .as-single-info h1,
+body .as-single-title {
+font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-weight: 800;
+    color: var(--text);
+}
+body .as-single-sales {
+color: var(--text-muted); 
+}
+body .as-gallery-stage,
+body .as-gallery-slide,
+body .as-gallery-thumb-item,
+body .as-gallery-thumb {
+background: #fff; border-color: var(--border); 
+}
+body .as-gallery-counter {
+background: rgba(0, 0, 0, .55);
+    color: #fff;
+}
+/* 参数表 / 规格表：原来是浅灰表头 */
+body .as-single-params,
+body .as-params,
+body .as-spec,
+body .as-spec-table,
+body .as-single-meta table {
+background: transparent;
+    color: var(--text-sub);
+}
+body .as-single-params th,
+body .as-single-params td,
+body .as-params th,
+body .as-params td,
+body .as-spec th,
+body .as-spec td {
+border-color: var(--border);
+    color: var(--text-sub);
+}
+body .as-single-params th,
+body .as-params th,
+body .as-spec th {
+background: rgba(255, 255, 255, .04);
+    color: var(--text);
+}
+
+/* 正文内表格（.as-post-content table）：
+   main.css 里 `tbody tr:nth-child(even){background:#fcfcfd}` 写死浅色，
+   深色模式下变白底浅字，看不清。定向层点名覆盖。 */
+body .as-post-content table {
+    background: transparent;
+    color: var(--text);
+    border-color: var(--border);
+}
+body .as-post-content table th,
+body .as-post-content table td {
+    border-color: var(--border);
+    color: var(--text);
+}
+body .as-post-content table thead th,
+body .as-post-content table th {
+    background: rgba(255, 255, 255, .06);
+    color: var(--text);
+    font-weight: 700;
+}
+body .as-post-content table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, .035);
+}
+body .as-post-content table tbody tr:nth-child(odd) {
+    background: transparent;
+}
+body .as-post-content table tbody td {
+    color: var(--text);
+}
+
+/* 详情页底部购买条 */
+/* ⚠️ 这里也不能加 backdrop-filter：
+ *    .as-shop-buy-sticky-wrap 是 position:fixed 的吸底条，祖先一旦有 backdrop-filter，
+ *    它就改成相对这个祖先定位 → 不再贴屏幕底部（v2.87.81 踩过的坑）。 */
+body .as-shop-buy,
+body .as-single-buy {
+    background: #10131a;
+    border-color: var(--border);
+    border-top: 1px solid var(--border);
+}
+body .as-mp-buy-tip,
+body .as-shop-buy-note {
+color: var(--text-muted); 
+}
+
+/* 通用按钮 */
+body .as-btn-shop-primary,
+body .as-btn-primary {
+background: var(--main);
+    color: var(--on-gold);
+    border-color: var(--main);
+    border-radius: 8px;
+}
+body .as-btn-shop-primary:hover,
+body .as-btn-primary:hover {
+background: var(--main-dark); border-color: var(--main-dark); 
+}
+body .as-btn-shop-ghost,
+body .as-btn-ghost {
+background: rgba(255, 255, 255, .06);
+    border-color: var(--border);
+    color: var(--text);
+    border-radius: 8px;
+}
+body .as-btn-shop-ghost:hover,
+body .as-btn-ghost:hover {
+border-color: rgba(255, 255, 255, .3); background: rgba(255, 255, 255, .1); 
+}
+
+/* ---------------------------------------------------------------------------
+ * 8. 购物车 / 结算 / 会员中心 / 地址簿 / 订单
+ * ------------------------------------------------------------------------- */
+body .as-shop-item,
+body .as-shop-summary,
+body .as-member-card,
+body .as-member-panel,
+body .as-order-card,
+body .as-address-card,
+body .as-checkout-card,
+body .as-pay-card {
+background: var(--surface);
+    border-color: var(--border);
+    border-radius: 12px;
+    color: var(--text);
+}
+body .as-shop-item-title,
+body .as-shop-summary h3 {
+color: var(--text); 
+}
+body .as-shop-item-meta,
+body .as-shop-summary-note {
+color: var(--text-muted); 
+}
+/* 表单控件统一 */
+body input[type="text"],
+body input[type="tel"],
+body input[type="email"],
+body input[type="password"],
+body input[type="number"],
+body input[type="search"],
+body input[type="url"],
+body textarea,
+body select {
+background: #1a1e26;
+    border-color: var(--border);
+    color: var(--text);
+    border-radius: 8px;
+}
+body input::placeholder,
+body textarea::placeholder {
+color: var(--text-muted); 
+}
+body select option {
+background: #1a1e26; color: var(--text); 
+}
+body .as-field label,
+body .as-form-row label {
+color: var(--text-sub); 
+}
+
+/* ---------------------------------------------------------------------------
+ * 9. 文章 / 单页正文（正文里有一批写死的浅色块：表格、代码、引用、hr）
+ * ------------------------------------------------------------------------- */
+body .as-post,
+body .as-single-post .as-post {
+background: var(--surface);
+    border-color: var(--border);
+    border-radius: 14px;
+}
+body .as-post-heading,
+body .as-section-title,
+body .as-archive-title {
+font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-weight: 800;
+    color: var(--text);
+}
+body .as-post-meta,
+body .as-post-meta a {
+color: var(--text-muted); 
+}
+body .as-post-cat {
+background: var(--rf-blue-soft);
+    color: var(--rf-blue);
+    border-radius: 6px;
+}
+body .as-post-content {
+color: var(--text); 
+}
+body .as-post-content h1,
+body .as-post-content h2,
+body .as-post-content h3,
+body .as-post-content h4 {
+color: var(--text); 
+}
+/* 重点句：原来只跟正文差一个 font-weight，深底上看不出来。
+   纯白提亮 + 半透明玫红荧光笔底线，一眼能扫到，不打断阅读。 */
+body .as-post-content strong {
+    color: #ffffff;
+    font-weight: 700;
+    background: linear-gradient(transparent 62%, rgba(255, 111, 165, .30) 62%);
+    padding: 0 2px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+}
+body .as-post-content a {
+color: var(--rf-pink); 
+}
+body .as-post-content a:hover {
+color: #ff94bb; 
+}
+body .as-post-content blockquote {
+background: rgba(255, 255, 255, .05);
+    border-left-color: var(--main);
+    color: var(--text-sub);
+}
+body .as-post-content code {
+background: rgba(255, 255, 255, .09);
+    color: #ffd0e0;
+}
+body .as-post-content pre {
+background: #0a0c11;
+    border-color: var(--border);
+    color: #e6e8eb;
+}
+body .as-post-content th {
+background: rgba(255, 255, 255, .06);
+    color: var(--text);
+}
+body .as-post-content td {
+color: var(--text-sub); 
+}
+body .as-post-content th,
+body .as-post-content td {
+border-color: var(--border); 
+}
+body .as-post-content hr {
+border-top-color: var(--border); 
+}
+body .as-post-content del {
+color: var(--text-muted); 
+}
+body .as-post-content mark {
+background: rgba(255, 111, 165, .22); color: #ffd0e0; 
+}
+body .as-post-tags a {
+background: rgba(255, 255, 255, .06);
+    border-color: var(--border);
+    color: var(--text-sub);
+    border-radius: 999px;
+}
+body .as-post-tags a:hover {
+color: var(--rf-pink); border-color: rgba(255, 111, 165, .45); 
+}
+body .as-post-footer {
+border-top-color: var(--border); 
+}
+
+/* ---------------------------------------------------------------------------
+ * 10. 关注我们 → 深色极光 CTA（本来就是深色，这里对齐新底色）
+ * ------------------------------------------------------------------------- */
+body .as-follow {
+position: relative;      /* 只给 :before 极光做包含域，不改变元素位置 */
+    overflow: hidden;
+    border-top: 0;
+    background: #0a0d14;
+}
+body .as-follow:before {
+content: "";
+    position: absolute;
+    inset: -40% -10% auto -10%;
+    height: 640px;
+    background:
+        radial-gradient(38% 52% at 22% 34%, rgba(70, 96, 255, .55), rgba(70, 96, 255, 0) 62%),
+        radial-gradient(34% 48% at 74% 18%, rgba(122, 78, 255, .5), rgba(122, 78, 255, 0) 60%),
+        radial-gradient(46% 56% at 55% 78%, rgba(38, 60, 180, .45), rgba(38, 60, 180, 0) 64%);
+    filter: blur(38px);
+    pointer-events: none;
+}
+body .as-follow-heading {
+color: #fff; 
+}
+body .as-follow-heading::after {
+background: rgba(255, 255, 255, .3); opacity: 1; 
+}
+body .as-follow-card {
+background: rgba(255, 255, 255, .08);
+    border-color: rgba(255, 255, 255, .16);
+    border-radius: 12px;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+body .as-follow-name {
+color: #fff; 
+}
+body .as-follow-body,
+body .as-follow-body > p {
+color: rgba(255, 255, 255, .8); 
+}
+body .as-follow-img,
+body .as-follow-img img {
+background: #fff; border-radius: 8px; 
+}
+body .as-follow-btn {
+background: #fff !important;
+    color: #17181c !important;
+    border-color: transparent !important;
+    border-radius: 999px;
+    font-weight: 700;
+}
+body .as-follow-btn:hover {
+color: #a3154c !important; 
+}
+
+/* ---------------------------------------------------------------------------
+ * 11. 页脚 / 版权 / 返回顶部 / 弹层
+ * ------------------------------------------------------------------------- */
+body .as-footer {
+background: #0a0c11; border-top: 1px solid var(--border); 
+}
+body .as-footer-desc,
+body .as-footer-contact p,
+body .as-footer-notice p {
+color: #98a0ad; 
+}
+body .as-footer-col a {
+color: #b8c0cc; 
+}
+body .as-footer-col a:hover {
+color: #fff; 
+}
+body .as-copyright,
+body .as-footer-bottom {
+color: #8e96a3; border-top-color: var(--border); 
+}
+body .as-back-top {
+background: rgba(255, 255, 255, .1);
+    border-color: var(--border);
+    color: var(--text);
+}
+body .as-back-top:hover {
+background: var(--main); color: #fff; border-color: var(--main); 
+}
+body .as-modal,
+body .as-dialog,
+body .as-toast,
+body .as-mp-modal {
+background: var(--surface-2);
+    border-color: var(--border);
+    color: var(--text);
+}
+body .as-modal-mask,
+body .as-dialog-mask {
+background: rgba(0, 0, 0, .72); 
+}
+
+/* ---------------------------------------------------------------------------
+ * 12. 专项补丁（审计出来的写死浅色 / 低对比处）
+ *     --main(#c2185b) 在深底上只有 3.2:1，凡是"用主色当文字"的地方一律换提亮色
+ * ------------------------------------------------------------------------- */
+/* 导航选中态 */
+body .as-nav > ul > li > a:hover,
+body .as-nav > ul > li.current-menu-item > a,
+body .as-nav > ul > li.current_page_item > a,
+body .as-nav > ul > li.current-menu-ancestor > a {
+color: var(--rf-pink);
+    background: rgba(255, 111, 165, .14);
+}
+body .as-nav ul.sub-menu {
+background: #10131a;
+    border-color: var(--border);
+}
+body .as-nav ul.sub-menu a {
+color: var(--text-sub); 
+}
+body .as-nav ul.sub-menu a:hover {
+background: rgba(255, 255, 255, .06); color: var(--text); 
+}
+
+/* 主力按钮：深色页面上统一"白胶囊"（截图首屏同款）；实心玫红只留给详情页购买 */
+body .as-sc-btn.is-main {
+background: #fff; color: #17181c; box-shadow: 0 8px 22px rgba(0, 0, 0, .4); 
+}
+body .as-sc-btn.is-main:hover {
+background: #f1f2f4; 
+}
+body .as-sc-btn:not(.is-main):not(.is-light) {
+background: transparent;
+    color: #fff;
+    border-color: rgba(255, 255, 255, .46);
+}
+body .as-sc-btn:not(.is-main):not(.is-light):hover {
+background: rgba(255, 255, 255, .12);
+    border-color: rgba(255, 255, 255, .7);
+}
+
+/* 热榜/文章小标签 */
+body .as-sc-hot-cat {
+color: var(--rf-pink);
+    background: rgba(255, 111, 165, .12);
+}
+body .as-sc-hot-meta {
+color: var(--text-muted); 
+}
+
+/* 详情页标签、优缺点、会员提示 */
+body .as-tag {
+background: rgba(255, 255, 255, .07); color: var(--text-sub); 
+}
+body .as-tag-green {
+background: rgba(255, 111, 165, .14); color: #ffb3cf; 
+}
+body .as-tag-brand {
+background: rgba(255, 111, 165, .14); color: var(--rf-pink); 
+}
+body .as-verdict-head-pro {
+background: rgba(255, 111, 165, .14); color: #ffb3cf; 
+}
+body .as-verdict-head-con {
+background: rgba(224, 120, 95, .16); color: #ffa88e; 
+}
+body .as-vip-hint {
+background: rgba(255, 111, 165, .14); color: #ffb3cf; 
+}
+body .as-vip-join {
+color: var(--rf-pink); 
+}
+
+/* 正文内嵌产品卡：白卡 → 深色卡（缩略图仍白底，商品图不被压暗） */
+body .as-pc {
+background: var(--surface);
+    border-color: var(--border);
+    border-radius: 12px;
+}
+body .as-pc-title,
+body .as-pc-title a {
+color: var(--text); 
+}
+body .as-pc-info,
+body .as-pc-sales {
+color: var(--text-muted); 
+}
+body .as-pc-thumb {
+background: #fff; border-radius: 8px; 
+}
+body .as-pc-old {
+color: #98a0ad; 
+}
+
+/* 详情页底栏里的「小程序下单」是白色描边按钮
+   ⚠️ web-shop.css 用的是 `.as-single-buy .as-shop-buy .as-buy-btn`（0,3,0），
+      这里必须同样带 .as-single-buy 才能压过它 */
+body .as-single-buy .as-shop-buy .as-buy-btn,
+body .as-shop-buy .as-buy-btn,
+body .as-shop-buy-mp .as-buy-btn {
+background: rgba(255, 255, 255, .06);
+    color: var(--text);
+    border-color: var(--border);
+}
+body .as-single-buy .as-shop-buy .as-buy-btn:hover,
+body .as-shop-buy .as-buy-btn:hover,
+body .as-shop-buy-mp .as-buy-btn:hover {
+background: rgba(255, 255, 255, .12); color: #fff; 
+}
+
+/* 手机端吸底购买条：web-shop.css 写死 rgba(255,255,255,.96) + 白字 → 白底白字看不清，
+   这里改成深色玻璃。带 .as-single-buy 前缀是为了压过原规则的 (0,2,0)。 */
+body .as-single-buy .as-shop-buy-sticky-wrap {
+background: rgba(16, 19, 26, .96);
+    border-top: 1px solid var(--border);
+}
+body .as-single-buy .as-shop-buy-sticky-wrap .as-btn-shop-ghost {
+background: rgba(255, 255, 255, .08);
+    border-color: var(--border);
+    color: var(--text);
+}
+body .as-single-buy .as-shop-buy-sticky-wrap .as-buy-btn {
+background: rgba(255, 255, 255, .08);
+    border-color: var(--border);
+    color: var(--text);
+}
+body .as-single-buy .as-shop-buy-sticky-wrap .as-btn-shop-primary {
+background: var(--main);
+    border-color: var(--main);
+    color: var(--on-gold);
+}
+body .as-single-buy .as-shop-buy-sticky-wrap .as-buy-note,
+body .as-single-buy .as-mp-buy-tip {
+color: var(--text-muted); 
+}
+
+/* 文章 / 列表「查看更多 →」等主色小链接在深底上要提亮 */
+body .as-section-more,
+body .as-section-more a,
+body .as-sc-card-more {
+color: var(--rf-pink); 
+}
+body .as-section-more:hover {
+color: #ffb3cf; 
+}
+
+/* 商城页（购物车 / 结算 / 会员）底色与空态卡 */
+body .as-shop-page {
+background: var(--bg); 
+}
+body .as-shop-title {
+font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-weight: 800;
+    color: var(--text);
+}
+/* web-shop.css 里 .as-shop-card 写死了 #fff */
+body .as-shop-card {
+background: var(--surface);
+    border-color: var(--border);
+    border-radius: 12px;
+    box-shadow: none;
+    color: var(--text);
+}
+body .as-shop-card h2,
+body .as-shop-card h3,
+body .as-shop-card strong,
+body .as-shop-card label {
+color: var(--text); 
+}
+body .as-shop-card p,
+body .as-shop-card small,
+body .as-shop-hint {
+color: var(--text-sub); 
+}
+body .as-shop-empty,
+body .as-cart-empty {
+background: var(--surface);
+    border-color: var(--border);
+    border-radius: 12px;
+    color: var(--text-sub);
+}
+body .as-shop-empty p,
+body .as-shop-empty h2,
+body .as-shop-empty h3 {
+color: var(--text-sub); 
+}
+body .as-shop-summary-total,
+body .as-shop-item-price {
+color: var(--price); 
+}
+body .as-shop-section-title,
+body .as-shop-summary h3 {
+color: var(--text); 
+}
+
+/* ---------------------------------------------------------------------------
+ * 14. 商城链路补全（web-shop.css / main.css 里写死的浅底 + 深字）
+ *     登录注册、购物车、结算、支付、订单、地址簿、会员中心、弹层
+ * ------------------------------------------------------------------------- */
+
+/* 14.1 文字层级：深字 → 主/次文字色 */
+body .as-shop-card-t,
+body .as-shop-card-p b,
+body .as-co-name,
+body .as-co-line b,
+body .as-cart-name,
+body .as-method-txt b,
+body .as-pay-done-t,
+body .as-member-order .as-order-namebox b,
+body .as-member-order .as-order-item b {
+color: var(--text); 
+}
+
+body .as-shop-card-p,
+body .as-field,
+body .as-co-line,
+body .as-cart-sum-label,
+body .as-checkout-sum span,
+body .as-pay-hint,
+body .as-pay-amount {
+color: var(--text-sub); 
+}
+
+/* 表单标签在截图那张登录页里是"深字压深底"，几乎看不见 —— 这里是根因 */
+body .as-field > span {
+color: var(--text); 
+}
+body .as-field > span i {
+color: #ff8a8a; 
+}
+
+/* 14.2 表单控件：写死 #fbfbfc / #fff → 深色输入框 */
+body .as-field input,
+body .as-field select,
+body .as-cart-qty input,
+body .as-verify-form input,
+body .as-mem-field input,
+body .as-field select:focus,
+body .as-mem-field input:focus {
+background: #1a1e26;
+    border-color: var(--border);
+    color: var(--text);
+}
+body .as-field input:focus,
+body .as-field select:focus,
+body .as-mem-field input:focus {
+border-color: rgba(255, 111, 165, .6);
+    box-shadow: 0 0 0 3px rgba(255, 111, 165, .16);
+    background: #1a1e26;
+}
+body .as-field input::placeholder,
+body .as-mem-field input::placeholder {
+color: var(--text-muted); 
+}
+
+/* 14.3 面板 / 分隔线 */
+body .as-cart-list,
+body .as-cart-bar,
+body .as-checkout-bar,
+body .as-pay-box {
+background: var(--surface);
+    border-color: var(--border);
+    box-shadow: none;
+}
+body .as-cart-row,
+body .as-co-row,
+body .as-order-state {
+border-bottom-color: var(--border-light); 
+}
+body .as-co-list {
+border-top-color: var(--border-light); 
+}
+body .as-co-sum,
+body .as-co-line-total {
+border-top-color: var(--border-light); 
+}
+/* 商品缩略图保留白底（与卡片商品图一致），占位字要在白底上够深 */
+body .as-cart-thumb,
+body .as-order-thumb,
+body .as-order-mini {
+background: #fff; 
+}
+body .as-order-thumb-ph,
+body .as-order-mini-ph {
+color: #6b7280; 
+}
+body .as-cart-gone-item {
+background: rgba(255, 255, 255, .07); color: var(--text-sub); 
+}
+
+/* 14.4 支付方式 + 收银台 */
+body .as-method {
+background: rgba(255, 255, 255, .04); border-color: var(--border); 
+}
+body .as-method:hover {
+border-color: rgba(255, 111, 165, .5); 
+}
+body .as-method:has(input:checked) {
+border-color: rgba(255, 111, 165, .62);
+    background: rgba(194, 24, 91, .2);
+}
+body .as-method-txt em {
+color: var(--text-muted); 
+}
+body .as-method-note {
+background: rgba(255, 111, 165, .16); color: #ffb3cf; 
+}
+/* 二维码必须白底（扫码识别），框内说明文字要改成深色 */
+body .as-pay-qr {
+background: #fff; border-color: rgba(255, 255, 255, .18); 
+}
+body .as-pay-qr .as-pay-wait {
+color: #4b5563; 
+}
+body .as-pay-done-ico {
+background: rgba(0, 163, 42, .18); color: #4ade80; 
+}
+
+/* 14.5 提示条 / 会员条 / 会员卡 */
+body .as-shop-alert-err,
+body .as-mem-alert {
+background: rgba(214, 54, 56, .13);
+    border-color: rgba(214, 54, 56, .36);
+    color: #ff9b9b;
+}
+body .as-vip-banner,
+body .as-member-vip {
+background: linear-gradient(100deg, rgba(194, 24, 91, .24), rgba(20, 23, 30, .35) 64%);
+    border-color: rgba(255, 111, 165, .26);
+}
+body .as-vip-banner-tx b,
+body .as-member-vipmain b {
+color: var(--rf-pink); 
+}
+body .as-member-avatar {
+background: rgba(194, 24, 91, .24); color: var(--rf-pink); 
+}
+body .as-member-tag-vip,
+body .as-member-order-tag {
+background: rgba(255, 111, 165, .16); color: #ffb3cf; 
+}
+body .as-member-more,
+body .as-member-linkbtn,
+body .as-shop-tip,
+body .as-shop-back,
+body .as-mem-switch button,
+body .as-mem-tab.is-on {
+color: var(--rf-pink); 
+}
+
+/* 14.6 四宫格 / 常用入口 / 地址簿 */
+body .as-order-cell,
+body .as-menu-item,
+body .as-member-addr,
+body .as-addr-chip {
+background: rgba(255, 255, 255, .04);
+    border-color: var(--border);
+}
+body .as-order-cell:hover,
+body .as-menu-item:hover,
+body .as-addr-chip:hover,
+body .as-addr-chip.is-on {
+background: rgba(194, 24, 91, .18);
+    border-color: rgba(255, 111, 165, .45);
+}
+body .as-order-lb {
+color: var(--text-sub); 
+}
+body .as-addr-change {
+background: transparent;
+    border-color: rgba(255, 111, 165, .45);
+    color: var(--rf-pink);
+}
+body .as-addr-change:hover {
+background: rgba(255, 111, 165, .12); box-shadow: none; 
+}
+body .as-addr-picked {
+background: rgba(194, 24, 91, .16);
+    border-color: rgba(255, 111, 165, .45);
+}
+body .as-addr-picked-phone {
+color: var(--text-sub); 
+}
+
+/* 14.7 金额 / 状态（主色在深底上只有 3.2:1，必须用提亮色） */
+body .as-cart-sub,
+body .as-cart-sum,
+body .as-co-sub,
+body .as-co-line-total b,
+body .as-checkout-sum b,
+body .as-pay-amount b,
+body .as-order-state b {
+color: var(--price); 
+}
+body .as-cart-name:hover,
+body .as-member-order:hover .as-co-name {
+color: var(--rf-pink); 
+}
+body .as-cart-del-btn:hover,
+body .as-order-state-refunded b {
+color: #ff8a8a; 
+}
+body .as-order-st-pending {
+color: #ffb84d; 
+}
+body .as-order-st-paid {
+color: #4ade80; 
+}
+
+/* 14.8 弹层（小程序引导 / 下单方式选择） */
+body .as-mp-box {
+border-color: var(--border); box-shadow: 0 24px 60px rgba(0, 0, 0, .6);
+}
+body .as-mp-title,
+body .as-choose-tx b {
+color: var(--text); 
+}
+body .as-mp-tip,
+body .as-choose-tx em {
+color: var(--text-sub); 
+}
+body .as-mp-close {
+color: var(--text-muted); 
+}
+body .as-mp-img img {
+background: #fff; 
+}
+body .as-choose-item {
+background: rgba(255, 255, 255, .04); border-color: var(--border); 
+}
+body .as-choose-item:hover {
+background: rgba(194, 24, 91, .18);
+    border-color: rgba(255, 111, 165, .45);
+}
+body .as-choose-ico {
+background: rgba(7, 193, 96, .16); color: #4ade80; 
+}
+body .as-choose-ico-site {
+background: rgba(194, 24, 91, .2); color: var(--rf-pink); 
+}
+
+/* 14.9 正文里的主色文字（dt / sub / 折叠标题 / 内嵌链接） */
+body .as-post-content dt,
+body .as-post-content sub,
+body .as-post-content details.as-tx-fold > summary,
+body .as-inline-product,
+body .as-spec-row dd a {
+color: var(--rf-pink); 
+}
+body .as-post-content .as-tx-badge {
+background: rgba(255, 111, 165, .14); color: #ffb3cf; 
+}
+body .as-post-content .as-tx-file .as-tx-ico {
+background: rgba(255, 111, 165, .14); color: var(--rf-pink); 
+}
+body .as-post-content kbd {
+background: rgba(255, 255, 255, .08);
+    border-color: var(--border);
+    color: var(--text);
+}
+
+/* 14.10 其余"用主色当文字"的小标签 */
+body .as-flash-coupon,
+body .as-promo-label,
+body .as-sc-card-promo,
+body .as-sc-list-head.is-search p b,
+body .as-vip-save,
+body .as-vip-joined,
+body .as-tab:hover {
+color: var(--rf-pink); 
+}
+body .as-flash-svc::before {
+color: var(--rf-pink); 
+}
+body .as-vip-save,
+body .as-vip-joined {
+background: rgba(255, 111, 165, .14); border-color: transparent; 
+}
+
+/* 14.11 站内页也带一团冷光（与首屏同一个语言，不再是纯平黑） */
+body .as-shop-page {
+background:
+        radial-gradient(900px 360px at 82% -140px, rgba(47, 111, 235, .18), rgba(47, 111, 235, 0) 62%),
+        radial-gradient(700px 300px at 6% -180px, rgba(194, 24, 91, .16), rgba(194, 24, 91, 0) 64%),
+        var(--bg);
+}
+body .as-sc-list-head,
+body .as-archive-head,
+body .as-blog-header {
+background:
+        radial-gradient(780px 300px at 78% -130px, rgba(47, 111, 235, .22), rgba(47, 111, 235, 0) 62%),
+        #10131a;
+}
+
+/* ---------------------------------------------------------------------------
+ * 15. 全站补漏（v2.87.80）
+ *     审计口径：桌面 1440 + 手机 390 逐页算 WCAG 对比度
+ *     （.tools/_audit_contrast.js 全量文字、.tools/_audit_grad.js 彩色/浅色块）
+ * ------------------------------------------------------------------------- */
+
+/* 15.1 首页结尾 CTA：原为浅粉渐变 (#fff6fa → #fde8f0)，
+ *      深色站里变成「浅底 + 浅字」，标题只有 1.07:1 */
+body .as-sc-cta {
+background:
+        radial-gradient(760px 340px at 50% -60px, rgba(47, 111, 235, .26), rgba(47, 111, 235, 0) 66%),
+        radial-gradient(560px 280px at 10% 118%, rgba(194, 24, 91, .2), rgba(194, 24, 91, 0) 64%),
+        #0b0d12;
+    border-top: 1px solid var(--border);
+}
+body .as-sc-cta h2 {
+color: #fff; 
+}
+body .as-sc-cta p {
+color: var(--text-sub); 
+}
+
+/* 15.2 列表页侧栏会员盒：浅粉渐变 → 深底玫红玻璃卡 */
+body .as-sc-side-box.is-vip {
+background: linear-gradient(140deg, rgba(194, 24, 91, .2), rgba(20, 23, 30, .5));
+    border-color: rgba(255, 111, 165, .3);
+}
+body .as-sc-side-box.is-vip b {
+color: var(--text); 
+}
+body .as-sc-side-box.is-vip p {
+color: var(--text-sub); 
+}
+
+/* 15.3 首页两条深酒红渐变带 → 黑底冷光
+ *      （截图风格是「黑底 + 蓝/玫红光斑」，酒红横带与整站割裂） */
+body .as-sc-flash {
+background:
+        radial-gradient(820px 360px at 88% -80px, rgba(47, 111, 235, .24), rgba(47, 111, 235, 0) 62%),
+        radial-gradient(760px 420px at 50% 128%, rgba(122, 78, 255, .16), rgba(122, 78, 255, 0) 70%),
+        #0b0d12;
+}
+body .as-sc-promise {
+background:
+        radial-gradient(700px 300px at 50% -120px, rgba(47, 111, 235, .2), rgba(47, 111, 235, 0) 64%),
+        #10131a;
+}
+body .as-sc-promise-item {
+background: rgba(255, 255, 255, .07);
+    border-color: rgba(255, 255, 255, .12);
+}
+
+/* 15.4 「用主色当文字」：--main-dark(#a3154c) 在深底上只有 2.4~2.5:1 */
+body .as-sc-card-vip {
+color: var(--rf-pink);
+    background: rgba(255, 111, 165, .14);
+}
+body .as-sale-group-coupon,
+body .as-sale-group-head.has-name .as-sale-group-coupon {
+color: var(--rf-pink);
+    background: rgba(255, 111, 165, .12);
+    border-color: rgba(255, 111, 165, .3);
+}
+/* 优惠页模块头的倒计时用的是浅底版（数字深玫红）→ 深底上换提亮版 */
+body .as-cd-unit {
+background: rgba(255, 255, 255, .06);
+    border-color: var(--border);
+}
+body .as-cd-unit b {
+color: var(--rf-pink); 
+}
+
+/* 15.5 搜索页内嵌搜索框：style-showcase.css 写死 background:#fff（0,3,2），
+ *      白底 + 浅字，输入内容看不见 */
+body .as-sc-search-box .as-searchform input[type="search"] {
+background: rgba(255, 255, 255, .06);
+    border-color: var(--border);
+    color: var(--text);
+}
+body .as-sc-search-box .as-searchform input[type="search"]:focus {
+background: #1a1e26;
+    border-color: rgba(255, 111, 165, .6);
+    box-shadow: 0 0 0 3px rgba(255, 111, 165, .16);
+}
+
+/* 15.6 折扣角标：白字压 #e91e63 只有 4.35:1 → 底色压深（≈6:1） */
+body .as-flash-off {
+background: linear-gradient(135deg, #b3174f, #8a0d3f);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .45);
+}
+
+/* 15.7 详情页「推荐理由」：background:var(--main-light) 在深色下变成整块暗酒红，
+ *      与深黑页面割裂 → 深色面板 + 玫红渐变一侧点缀（文字仍是主文字色） */
+body .as-reason {
+background: linear-gradient(100deg, rgba(194, 24, 91, .2), rgba(20, 23, 30, .22) 72%), var(--surface);
+    border-color: var(--border);
+}
+body .as-reason .as-extra-title {
+border-left-color: var(--rf-pink); 
+}
+
+/* ---------------------------------------------------------------------------
+ * 16. 正文扩展组件（as-tx-*，v2.87.72 新增）深色版
+ *     这批样式是为浅色正文写的「浅底 + 深字」，深色正文里会冒出白色块
+ * ------------------------------------------------------------------------- */
+body .as-post-content .as-tx-box.as-tx-note {
+background: rgba(255, 255, 255, .05);
+    border-color: var(--border);
+    color: var(--text-sub);
+}
+body .as-post-content .as-tx-box.as-tx-tip {
+background: rgba(74, 222, 128, .1);
+    border-color: rgba(74, 222, 128, .28);
+    color: #86efac;
+}
+body .as-post-content .as-tx-box.as-tx-warn {
+background: rgba(255, 184, 77, .12);
+    border-color: rgba(255, 184, 77, .3);
+    color: #ffc978;
+}
+body .as-post-content .as-tx-box.as-tx-danger {
+background: rgba(214, 54, 56, .14);
+    border-color: rgba(214, 54, 56, .34);
+    color: #ff9b9b;
+}
+body .as-post-content .as-tx-badge.as-tx-gray {
+background: rgba(255, 255, 255, .08);
+    color: var(--text-sub);
+}
+body .as-post-content .as-tx-badge.as-tx-green {
+background: rgba(74, 222, 128, .14);
+    color: #86efac;
+}
+body .as-post-content .as-tx-badge.as-tx-orange {
+background: rgba(255, 184, 77, .14);
+    color: #ffc978;
+}
+body .as-post-content a.as-tx-btn.as-tx-ghost,
+body .as-post-content .as-tx-btn.as-tx-ghost {
+background: transparent;
+    color: var(--rf-pink);
+    border-color: rgba(255, 111, 165, .45);
+}
+body .as-post-content a.as-tx-btn.as-tx-ghost:hover {
+background: rgba(255, 111, 165, .14);
+    color: #ffb3cf;
+}
+body .as-post-content ol.as-tx-steps > li {
+border-left-color: rgba(255, 255, 255, .14); 
+}
+body .as-post-content details.as-tx-fold {
+background: var(--surface-2); 
+}
+body .as-post-content .as-tx-file {
+background: rgba(255, 255, 255, .04);
+    border-color: rgba(255, 255, 255, .18);
+}
+
+/* ---------------------------------------------------------------------------
+ * 17. 货架版首页（后台「首页版式 = 货架」）同步深色
+ *     两站当前都用橱窗版，这套保证切回去也不会冒出浅色块
+ * ------------------------------------------------------------------------- */
+body .as-hero {
+background:
+        radial-gradient(680px 300px at 78% -60px, rgba(47, 111, 235, .26), rgba(47, 111, 235, 0) 62%),
+        #0d0f15;
+}
+body .as-hero p {
+color: var(--text-sub); opacity: 1; 
+}
+body .as-ads-viewport {
+background: var(--surface); 
+}
+body .as-rank-bar {
+background: rgba(255, 255, 255, .16); 
+}
+body .as-rank-card {
+background: var(--surface);
+    border-color: var(--border);
+}
+body .as-promo-badge.as-promo-badge-na {
+background: rgba(255, 255, 255, .16);
+    color: var(--text-sub);
+}
+body .as-rel-box {
+background: var(--surface);
+    border-color: var(--border);
+}
+
+/* ---------------------------------------------------------------------------
+ * 18. 旧版产品卡（.as-card：详情页「相关推荐」/ 文章页推荐 / 分类兜底列表）
+ *     结构是 4 个并列 div（标题 / 已售 / 价格 / 券 / 会员价 / 按钮），
+ *     默认一列排下来 = 三行。用户 2026-11-09 要求所有产品卡统一成两行：
+ *       第 1 行：已售 N 件              ¥299 ¥399
+ *       第 2 行：满150减30              会员到手 ¥183
+ *     纯 CSS grid，不改 PHP 模板。按钮固定落在第 4 行（1fr）贴底，
+ *     保证同一排卡片按钮对齐（原 flex 的 margin-top:auto 效果）。
+ * ------------------------------------------------------------------------- */
+body .as-card-body {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto auto 1fr;
+    column-gap: 8px;
+    row-gap: 6px;
+    align-items: center;
+}
+body .as-card-title {
+    grid-column: 1 / -1;
+    grid-row: 1;
+}
+body .as-card-sales {
+    grid-column: 1;
+    grid-row: 2;
+    margin-top: 0;
+}
+body .as-card-price {
+    grid-column: 2;
+    grid-row: 2;
+    justify-content: flex-end;
+}
+body .as-card-promo {
+    grid-column: 1;
+    grid-row: 3;
+}
+body .as-card .as-vip-hint {
+    grid-column: 2;
+    grid-row: 3;
+    margin-top: 0;
+    justify-self: end;
+}
+body .as-card-body > .as-buy-btn {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    align-self: end;
+}
+/* 卡片上不显示券倒计时（用户要求：第二行只放「优惠信息 + 到手价」） */
+body .as-card .as-card-promo-cd {
+    display: none;
+}
+
+/* 手机端旧卡：两列只有 169px 宽，「已售 N 件 + ¥259 ¥399」实测需要 ~190px，
+ * 硬塞必然折行 → 改成与橱窗卡一致的「图左 + 信息右」横卡（信息区约 200px）。
+ * 这也是站内橱窗版手机端的既有版式，视觉统一。 */
+@media (max-width: 600px) {
+    body .as-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    body .as-card {
+        flex-direction: row;
+        align-items: stretch;
+    }
+    body .as-card-img {
+        width: 38%;
+        flex: none;
+        /*
+         * v2.87.121（用户：还是显示按比例缩小的正方形图片吧，宽度不变、
+         * 高度等比例，不用撑到底或者顶）：
+         * 120 版拉伸到与右侧文字区等高 → 图片被裁切，用户不要。
+         * 现在回到**正方形等比例**：宽度仍 38%，高度 = 宽度，垂直居中。
+         */
+        align-self: center;
+        aspect-ratio: 1 / 1;
+        overflow: hidden;        /* 图片裁切在圆角内 */
+    }
+    body .as-card-img img {
+        width: 100%;
+        height: 100%;
+        aspect-ratio: auto;     /* 覆盖 main.css 的 1/1 */
+        object-fit: contain;     /* 完整显示，不裁剪 */
+    }
+    body .as-card-body {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * 19. 文章 / 单页正文与标题左对齐（用户 2026-11-09，桌面端也要求）
+ *     结构：.as-post(padding 40) → .as-post-content(padding 左右 56)
+ *     → 正文比标题再向右缩 56px。去掉正文左右 padding 即同左边缘。
+ *     手机端本来就是 padding 16 + margin -16 抵消好的（实测 37→353 对齐），
+ *     所以只在 ≥601px 生效，不动手机。
+ * ------------------------------------------------------------------------- */
+@media (min-width: 601px) {
+    body .as-post-content {
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * 20. 旧版卡的「券标签 / 会员到手价」与橱窗卡完全同规格
+ *     改前：旧卡 = 灰字 #b8c0cc + 白 7% 底 + 999 胶囊 + 600 字重
+ *           橱窗卡 = 粉字 --rf-pink + 玫红/粉底 + 4px 小圆角 + 400 字重
+ *     用户 2026-11-09：相关推荐卡片的这块设计要和别处一致
+ * ------------------------------------------------------------------------- */
+body .as-card-promo,
+body .as-card .as-vip-hint {
+    font-size: 10.5px;
+    font-weight: 400;
+    border-radius: 4px;
+    padding: 1px 6px;
+}
+body .as-card-promo {
+    color: var(--rf-pink);
+    background: rgba(194, 24, 91, .18);
+    border-color: rgba(255, 255, 255, .1);
+    /* grid item 默认 stretch → 胶囊会被拉满整列；改成按内容宽度贴左 */
+    justify-self: start;
+    /* 基础样式是 margin:6px 0 2px，上下不等 → 在 grid 单元格里会把胶囊顶下来 3px，
+       和右边的到手价错位。这里归零，垂直位置交给 grid 的 align-items:center。 */
+    margin: 0;
+}
+body .as-card .as-vip-hint {
+    color: var(--rf-pink);
+    background: rgba(255, 111, 165, .14);
+    /* 券胶囊有 1px 边框（高 21），到手价没有（高 19）→ 同一行里上下错开 2px。
+       补一个透明边框让两者等高，视觉上严格平行。 */
+    border: 1px solid transparent;
+    margin: 0;
+}
+body .as-sc-card-vip {
+    border: 1px solid transparent;
+}
+
+/* 手机端：基础样式给 .as-card .as-vip-hint 单独设了 10px/3px 7px（高 18），
+ * 而券胶囊是 10.5px/1px 6px（高 21）→ 两个标签在一行里错开。这里统一成同一套。 */
+@media (max-width: 600px) {
+    body .as-card-promo,
+    body .as-card .as-vip-hint {
+        font-size: 10.5px;
+        padding: 1px 6px;
+        line-height: 1.45;
+        gap: 0;
+    }
+}
+
+/* 页脚 logo：同上反色；去掉基础样式的白底 + padding（padding 会留一圈白框） */
+body .as-footer-brand-col .as-footer-logo img {
+    background: transparent;
+    padding: 0;
+    filter: invert(1) hue-rotate(180deg);
+}
+
+/* ---------------------------------------------------------------------------
+ * 21. 收尾统一（全站扫描后剩下的两处）
+ * ------------------------------------------------------------------------- */
+
+/* 21.1 首页「热门文章」卡片还在用浅灰白描边 #eaedf2 —— 深色底上是一条亮线 */
+body .as-sc-hot-lead,
+body .as-sc-hot-item {
+    border-color: var(--border);
+}
+
+/* 21.2 字体族统一：--serif 原本是「Noto Serif SC」，但页头/模块标题已经被
+ *      换成无衬线 → 文章标题、优惠带标题、价格数字还是宋体，混着很乱。
+ *      直接把变量换掉，所有用 var(--serif) 的地方（11+15+1 处）一次拉齐。 */
+body {
+    --serif: -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans SC",
+             "Microsoft YaHei", sans-serif;
+}
+
+/* 22.1 优惠页的券分组组头：原本是「暗红渐变块 + 3px 玫红左线」，
+ *      深色底上看起来是整条脏红带 → 换深色面板，只留玫红左饰线做强调 */
+body .as-sale-group-head {
+    background: rgba(255, 255, 255, .04);
+}
+
+/* 22.2 优惠页商品卡的「会员到手」还是灰底灰字（第 5 节旧规则），
+ *      与其他位置（粉底粉字）不一致 */
+body .as-flash-vip {
+    color: var(--rf-pink);
+    background: rgba(255, 111, 165, .14);
+    border-color: transparent;
+}
+
+/* 22.3 分类卡（按需求挑）的遮罩在深色下压得太狠：从 28% 就开始变暗 + 图片 opacity .95，
+ *      整张卡看着发灰。遮罩起点下移到 46%，图恢复不透明 —— 白底商品图才透亮 */
+body .as-sc-cat-mask {
+    background: linear-gradient(180deg, rgba(10, 12, 18, 0) 46%, rgba(10, 12, 18, .5) 74%, rgba(10, 12, 18, .88));
+}
+body .as-sc-cat-photo {
+    opacity: 1;
+}
+
+/* ---------------------------------------------------------------------------
+ * 23. 优惠页 /sale/（v2.87.90）
+ *     卡片已改成和商品归档页同款的橱窗卡（模板改动），这里只做两件事：
+ *       ① 页头信息做得更「高大上」
+ *       ② 券活动带做成一块促销横幅（原来是一条暗红渐变窄条）
+ *     这些类（.as-sale-*）全站只在优惠页出现，不会影响别的页面。
+ * ------------------------------------------------------------------------- */
+
+/* ---- 页头 ---- */
+body .as-sale-head {
+    padding: 34px 0 8px;
+    align-items: flex-end;
+    gap: 22px;
+}
+body .as-sale-title {
+    font-size: 40px;
+    font-weight: 900;
+    letter-spacing: -.02em;
+    line-height: 1.1;
+    color: #fff;
+    margin: 0 0 10px;
+}
+body .as-sale-desc {
+    font-size: 13.5px;
+    line-height: 1.75;
+    color: rgba(255, 255, 255, .58);
+    max-width: 620px;
+}
+body .as-sale-total {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 15px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .06);
+    border-color: rgba(255, 255, 255, .12);
+    color: #b8c0cc;
+    font-size: 12.5px;
+    white-space: nowrap;
+}
+
+/* ---- 券活动带 ---- */
+body .as-sale-group {
+    margin-top: 28px;
+}
+body .as-sale-group-head {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 18px 22px 18px 24px;
+    margin-bottom: 18px;
+    border-radius: 16px;
+    background:
+        radial-gradient(520px 180px at 88% -40px, rgba(47, 111, 235, .30), rgba(47, 111, 235, 0) 68%),
+        linear-gradient(100deg, rgba(194, 24, 91, .22), rgba(20, 23, 30, .5) 62%),
+        #14171e;
+    border-color: rgba(255, 111, 165, .26);
+    box-shadow: 0 20px 44px -28px rgba(0, 0, 0, .95);
+}
+/* 左侧玫红饰线 */
+body .as-sale-group-head::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #ff6fa5, #c2185b);
+}
+body .as-sale-group-name {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -.01em;
+    color: #fff;
+}
+body .as-sale-group-coupon {
+    background: rgba(255, 111, 165, .16);
+    border-color: rgba(255, 111, 165, .34);
+    color: #ff6fa5;
+    font-weight: 700;
+}
+body .as-sale-group-num {
+    color: rgba(255, 255, 255, .5);
+    font-size: 12.5px;
+}
+/* 倒计时：白字数字块（原来淡粉底 + 玫红字，深底上发闷） */
+body .as-sale-group-head .as-cd-label {
+    color: rgba(255, 255, 255, .62);
+    opacity: 1;
+}
+body .as-sale-group-head .as-cd-unit {
+    background: rgba(255, 255, 255, .1);
+    border-color: rgba(255, 255, 255, .22);
+}
+body .as-sale-group-head .as-cd-unit b {
+    color: #fff;
+}
+body .as-sale-group-head .as-cd-unit i {
+    color: rgba(255, 255, 255, .6);
+}
+
+/* ---- 手机端 ---- */
+@media (max-width: 600px) {
+    body .as-sale-head {
+        padding: 16px 0 2px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    body .as-sale-title {
+        font-size: 27px;
+        margin-bottom: 8px;
+    }
+    body .as-sale-desc {
+        font-size: 12.5px;
+        line-height: 1.7;
+    }
+    body .as-sale-group {
+        margin-top: 20px;
+    }
+    body .as-sale-group-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 15px 15px 15px 17px;
+        border-radius: 14px;
+        margin-bottom: 14px;
+    }
+    body .as-sale-group-title {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    body .as-sale-group-name {
+        font-size: 18px;
+    }
+    body .as-sale-group-num {
+        margin-left: 0;
+    }
+}
+
+/* 优惠页卡片一行 4 个（用户 2026-11-09）。
+ * 归档页 .as-sc-list-items 是 3 列；优惠页每张卡信息量少（券信息在顶部活动带里），
+ * 一屏放 4 个更像大促页。平板/手机仍走基础断点（2 列 / 1 列横卡）。 */
+@media (min-width: 901px) {
+    body .as-sale-group .as-sc-list-items {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * 24. 卡片「优惠信息 / 会员到手」提亮（v2.87.95）
+ * ---------------------------------------------------------------------------
+ * 用户 2026-11-09 从三版预览里选了「白价签」：
+ *   券   = 亮粉描边（半透明底 + 亮粉字），做辅助
+ *   到手 = 白底深字，做主角（最深色卡片上最跳，等于价签）
+ *
+ * 🔴 只改 background / color / border-color / font-weight / box-shadow，
+ *    **font-size、padding、圆角、边框宽度一律不动** →
+ *    标签高度仍是 21px，两行结构与按钮位置零位移（已用 _card_rows.js 回归）。
+ *    字重 400→600/700 会让标签宽 5~6px，手机端 200px 信息区实测不折行。
+ * ------------------------------------------------------------------------- */
+body .as-sc-card-promo,
+body .as-card-promo {
+    background: rgba(255, 111, 165, .13);
+    color: #ff9cc0;
+    border-color: rgba(255, 111, 165, .52);
+    font-weight: 600;
+}
+body .as-sc-card-vip,
+body .as-card .as-vip-hint {
+    background: #fff;
+    color: #17181c;
+    border-color: transparent;
+    font-weight: 700;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .45);
+}
+/* 「优惠券不可用」不跟着变亮：保持弱化（原 .is-na 规则特异性 0,2,0 已够，这里只兜底）
+ * 手机端同样保持 —— 它是提示不是卖点。 */
+body .as-sc-card-promo.is-na {
+    background: rgba(255, 255, 255, .06);
+    color: var(--text-muted);
+    border-color: rgba(255, 255, 255, .12);
+    font-weight: 400;
+}
+
+/* ---------------------------------------------------------------------------
+ * 25. 商品卡左上角「券徽章」（v2.87.96）
+ * ---------------------------------------------------------------------------
+ * 用户 2026-11-09 选定「角旗」方案（实心玫红贴左上角，左下切圆角）。
+ * 显示的是**券名称**（as_coupons.name，如「双十一优惠」），不是面额。
+ *
+ * 🔴 输出条件在 PHP：as_coupon_badge_name() —— 有可用券 && **非控价商品**。
+ *    控价商品（dg_vip_hide）一律不挂徽章：控价 = 优惠对外不露，
+ *    在图片上盖活动名等于主动招供。
+ *
+ * 定位：absolute 相对图容器（.as-sc-card-img / .as-card-img 都是块级 link），
+ *     卡片本身 overflow:hidden + 圆角，徽章会被自然裁进圆角里。
+ *     徽章是装饰，pointer-events:none → 不挡「点图进详情」。
+ * ------------------------------------------------------------------------- */
+body .as-sc-card-img,
+body .as-card-img {
+    position: relative;
+}
+body .as-coupon-badge {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 3;
+    display: block;
+    max-width: 74%;
+    padding: 5px 13px 6px;
+    border-radius: 0 0 14px 0;
+    /* 白字压渐变：起点 #e5255f 只有 4.4:1（小字要 4.5）→ 压深一档到 4.9:1 */
+    background: linear-gradient(135deg, #d91e56, #9c0d3d);
+    color: #fff;
+    font-size: 11.5px;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: .01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 6px 18px rgba(229, 37, 95, .42);
+    pointer-events: none;
+}
+@media (max-width: 600px) {
+    body .as-coupon-badge {
+        max-width: 84%;
+        padding: 4px 10px 5px;
+        font-size: 10.5px;
+        border-radius: 0 0 12px 0;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * 26. 首页「限时优惠」多券排版（v2.87.99）
+ * ---------------------------------------------------------------------------
+ * 单张券：.as-sc-flash-coupons 用 display:contents → 胶囊仍是 head 的 flex 项，
+ *        与改动前「标题 + 券同行」逐像素一致。
+ * 多张券：整块换行，标题独占一行、券胶囊在下一行并排（否则第二张券会
+ *        单独掉到最左边，看着像漏了一行）。
+ * ------------------------------------------------------------------------- */
+body .as-sc-flash-coupons {
+    display: contents;
+}
+body .as-sc-flash-coupons.is-many {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    flex-basis: 100%;
+    margin-top: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+ * 27. 优惠页：长期有效的券（无结束时间）给一个同尺寸静态块（v2.87.100）
+ * ------------------------------------------------------------------------- */
+body .as-sale-group-cd.is-endless {
+    display: inline-flex;
+    align-items: center;
+}
+body .as-sale-endless {
+    display: inline-flex;
+    align-items: center;
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .05);
+    border: 1px solid rgba(255, 255, 255, .12);
+    color: rgba(255, 255, 255, .64);
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+
+/* ---------------------------------------------------------------------------
+ * 28. 首页「限时优惠」多券档位面板（v2.87.101）
+ * ---------------------------------------------------------------------------
+ * v2.87.99 把多张券换行平铺后，两个虚线胶囊紧贴大标题、和下方说明挤成一块；
+ * 去掉倒计时后左列「上重下空」，与右侧 4 张商品卡（高 339）不协调。
+ * 这里给券组一块半透明玻璃底板，与优惠页顶部的深色玻璃面板同一语言：
+ * 标题 / 档位 / 说明形成三层，左列不再头重脚轻。
+ * 只改这一块自身，不动 DOM、不加字、不动商品区；左列增高约 24px 仍短于
+ * 右侧商品区，模块总高与下方区块零位移。
+ * 描边用 inset box-shadow 而不是 border —— 避免给原本无边框的容器 +2px。
+ * ------------------------------------------------------------------------- */
+body .as-sc-flash-coupons.is-many {
+    margin-top: 12px;
+    padding: 11px 13px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .045);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .10);
+}
+/* 单张券时胶囊靠 display:contents 留在标题旁，需要 12px 间距；
+   多券收进面板后改由容器 gap(8px) 统一控制，否则每张都带 12px 左边距。 */
+body .as-sc-flash-coupons.is-many .as-sc-flash-coupon {
+    margin-left: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * 29. 上一篇 / 下一篇 导航（v2.87.121）
+ * ---------------------------------------------------------------------------
+ * 用户 2026-11-21：产品详情页与文章详情页都要有；纯文字按钮、左右并排，
+ * 放在页面**最底部**；只有一侧存在时只显示那一侧。
+ * 产品页在两栏 grid 里 → 独占整行（grid-column: 1/-1）；
+ * 右栏的吸顶/吸底落地线以这个区块为锚（single-two-col.js）：
+ * 导航完全进入视口后右栏放手随页面滚走。
+ * ------------------------------------------------------------------------- */
+body .as-prevnext {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 28px;
+    /* 🔴 必须是定位元素：右栏 .as-single-info 是 sticky（定位元素），
+       定位元素永远画在普通流元素之上 → 不加定位的话导航会被右栏卡片压住。 */
+    position: relative;
+    z-index: 3;
+}
+body .as-prevnext-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 20px;
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12);
+    color: var(--text);
+    font-size: 14.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: box-shadow .2s, color .2s;
+}
+body .as-prevnext-item:hover {
+    color: var(--rf-pink);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .24);
+}
+body .as-prevnext-item.is-next { margin-left: auto; }
+body .as-prevnext-arrow {
+    font-size: 18px;
+    line-height: 1;
+    color: var(--rf-pink);
+}
+/* 产品页：导航放在**左栏**（商品详情结束处），不占右栏那一列 */
+body .as-single > .as-prevnext {
+    grid-column: 1;
+    grid-row: 5;
+    margin-top: 20px;
+}
+@media (max-width: 600px) {
+    body .as-prevnext { gap: 10px; margin-top: 20px; }
+    body .as-prevnext-item { padding: 11px 15px; font-size: 13.5px; }
+}
+
+/* 正文内嵌销量榜：整卡是 <a>，别被正文链接的玫红染色 / 加下划线。
+   body .as-post-content a 是 0,2,2 且本文件后加载，所以覆盖要写在这里同特异性后写胜出。 */
+body .as-post-content a.as-rank-item,
+body .as-post-content a.as-rank-item:hover,
+body .as-post-content a.as-rank-item:focus {
+    color: var(--text);
+    text-decoration: none;
+}

@@ -1,0 +1,29 @@
+# 统一换行符：仓库内一律 LF，检出到 Windows 时才转成 CRLF。
+# 原因：PHP / YAML / shell 脚本用 CRLF 可能出问题（尤其是 YAML 的
+#       行尾会变成 \r，GitHub Actions 解析时会报错）。
+
+* text=auto eol=lf
+
+*.php   text eol=lf
+*.css   text eol=lf
+*.js    text eol=lf
+*.json  text eol=lf
+*.txt   text eol=lf
+*.md    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.xml   text eol=lf
+*.po    text eol=lf
+*.pot   text eol=lf
+*.sh    text eol=lf
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.eot   binary
+*.zip   binary

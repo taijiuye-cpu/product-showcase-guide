@@ -1,0 +1,199 @@
+/**
+ * 后台：京东详情图导入弹窗（v2.87.105）
+ * WP 后台是浅色系，这里保持后台原生观感，只把主操作染成主题玫红。
+ * 手机端复用主题的 782px 断点：弹窗全屏、网格两列、底部操作条吸底。
+ */
+
+#as-jd-import-btn.as-jd-btn {
+    color: #c2185b;
+    border-color: #c2185b;
+    font-weight: 600;
+}
+#as-jd-import-btn.as-jd-btn:hover,
+#as-jd-import-btn.as-jd-btn:focus {
+    background: #c2185b;
+    color: #fff;
+    border-color: #c2185b;
+    box-shadow: none;
+}
+#as-jd-import-btn .dashicons {
+    vertical-align: middle;
+    margin-right: 3px;
+    margin-top: -2px;
+}
+
+.as-jd-mask {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    background: rgba(20, 24, 33, .55);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.as-jd-mask.show { display: flex; }
+
+.as-jd-dlg {
+    width: 780px;
+    max-width: 100%;
+    max-height: min(88vh, 920px);
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .35);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: #1d2327;
+    font-size: 13px;
+}
+.as-jd-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    border-bottom: 1px solid #dcdcde;
+    flex: none;
+}
+.as-jd-head strong { font-size: 15px; }
+.as-jd-tag {
+    font-size: 11px;
+    background: #fdf0f5;
+    color: #c2185b;
+    border: 1px solid #f6c9dc;
+    border-radius: 4px;
+    padding: 2px 8px;
+}
+.as-jd-x {
+    margin-left: auto;
+    border: 0;
+    background: none;
+    font-size: 23px;
+    line-height: 1;
+    color: #8a9099;
+    cursor: pointer;
+    padding: 0 4px;
+}
+.as-jd-x:hover { color: #c2185b; }
+
+.as-jd-body { padding: 18px 20px; overflow: auto; flex: 1; }
+.as-jd-inputrow { display: flex; gap: 8px; }
+.as-jd-inputrow input {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 11px;
+    border: 1px solid #8c8f94;
+    border-radius: 5px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.as-jd-primary {
+    background: #c2185b;
+    color: #fff;
+    border: 1px solid #c2185b;
+    border-radius: 5px;
+    padding: 8px 17px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.as-jd-primary:hover:not(:disabled) { background: #9c1149; border-color: #9c1149; }
+.as-jd-primary:disabled { opacity: .5; cursor: not-allowed; }
+.as-jd-primary.is-lg { padding: 9px 22px; min-height: 42px; }
+.as-jd-hint { margin: 8px 0 0; color: #646970; font-size: 12px; }
+
+.as-jd-msg { display: none; margin-top: 12px; padding: 9px 12px; border-radius: 6px; font-size: 12.5px; }
+.as-jd-msg.show { display: block; }
+.as-jd-msg.is-err { background: #fcf0f1; border: 1px solid #f4c7cb; color: #8a1c24; }
+.as-jd-msg.is-ok { background: #edf7f0; border: 1px solid #b8e0c6; color: #1a7f4b; }
+
+.as-jd-steps { display: none; margin-top: 16px; border: 1px solid #dcdcde; border-radius: 7px; overflow: hidden; }
+.as-jd-steps.show { display: block; }
+.as-jd-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 13px;
+    font-size: 12.5px;
+    color: #8a9099;
+    border-bottom: 1px solid #f0f0f1;
+}
+.as-jd-step:last-child { border-bottom: 0; }
+.as-jd-step .dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #dcdcde; flex: none; }
+.as-jd-step.done { color: #3c434a; }
+.as-jd-step.done .dot { background: #1a7f4b; border-color: #1a7f4b; position: relative; }
+.as-jd-step.done .dot::after {
+    content: ""; position: absolute; left: 4px; top: 1px;
+    width: 4px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(42deg);
+}
+.as-jd-step.run { color: #c2185b; }
+.as-jd-step.run .dot { border-color: #c2185b; border-top-color: transparent; animation: as-jd-spin .7s linear infinite; }
+@keyframes as-jd-spin { to { transform: rotate(360deg); } }
+
+.as-jd-result { display: none; margin-top: 16px; }
+.as-jd-result.show { display: block; }
+.as-jd-stat {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+    padding: 9px 12px; background: #f6f7f7; border: 1px solid #dcdcde;
+    border-radius: 7px 7px 0 0; font-size: 12.5px;
+}
+.as-jd-stat b { color: #c2185b; font-size: 14px; }
+.as-jd-acts { display: flex; gap: 6px; margin-left: 6px; }
+.as-jd-mini {
+    border: 1px solid #c3c4c7; background: #fff; border-radius: 4px;
+    padding: 3px 10px; font-size: 12px; cursor: pointer; color: #2c3338;
+}
+.as-jd-mini:hover { border-color: #c2185b; color: #c2185b; }
+.as-jd-source { margin-left: auto; color: #646970; font-size: 11.5px; }
+
+.as-jd-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    padding: 12px; border: 1px solid #dcdcde; border-top: 0; border-radius: 0 0 7px 7px;
+    max-height: 380px; overflow-y: auto;
+}
+.as-jd-tile {
+    position: relative; border: 2px solid transparent; border-radius: 7px; overflow: hidden;
+    background: #f0f0f1; cursor: pointer; aspect-ratio: 3 / 4;
+}
+.as-jd-tile img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: .55; }
+.as-jd-tile.sel { border-color: #c2185b; }
+.as-jd-tile.sel img { opacity: 1; }
+.as-jd-tile .no {
+    position: absolute; right: 5px; bottom: 5px; font-size: 11px; color: #fff;
+    background: rgba(0, 0, 0, .62); border-radius: 4px; padding: 1px 6px;
+}
+.as-jd-tile.sel .no { background: #c2185b; }
+.as-jd-tile.broken { background: #f6f7f7; }
+.as-jd-ph { display: flex; align-items: center; justify-content: center; height: 100%; color: #8a9099; font-size: 12px; }
+
+.as-jd-foot {
+    display: flex; align-items: center; gap: 12px;
+    border-top: 1px solid #dcdcde; padding: 12px 20px; background: #fafafa; flex: none;
+}
+.as-jd-footnote { color: #646970; font-size: 12px; flex: 1; min-width: 0; }
+
+.as-jd-toast {
+    position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%);
+    z-index: 100001; background: #1d2327; color: #fff; border-radius: 8px;
+    padding: 12px 20px; font-size: 13px; box-shadow: 0 12px 34px rgba(0, 0, 0, .3);
+    max-width: min(90vw, 560px); text-align: center;
+    opacity: 1; transition: opacity .3s, transform .3s;
+}
+.as-jd-toast.out { opacity: 0; transform: translate(-50%, 10px); }
+
+/* 手机端后台（与 admin-editor-app.css 的 782px 断点一致） */
+@media (max-width: 782px) {
+    .as-jd-mask { padding: 0; align-items: stretch; }
+    .as-jd-dlg { width: 100%; max-width: 100%; height: 100%; max-height: 100%; border-radius: 0; }
+    .as-jd-head { padding: 13px 14px; }
+    .as-jd-body { padding: 14px 12px; }
+    .as-jd-inputrow { flex-direction: column; }
+    .as-jd-inputrow input { font-size: 16px; padding: 11px 12px; }
+    .as-jd-primary.is-lg, .as-jd-primary { min-height: 44px; }
+    .as-jd-grid { grid-template-columns: repeat(2, 1fr); max-height: none; }
+    .as-jd-source { margin-left: 0; width: 100%; }
+    .as-jd-foot { position: sticky; bottom: 0; padding: 10px 12px; flex-wrap: wrap; }
+    .as-jd-footnote { width: 100%; flex: 1 0 100%; }
+    .as-jd-foot .as-jd-primary { width: 100%; }
+}
