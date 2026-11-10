@@ -429,7 +429,13 @@ function as_site_settings_fields( $tab ) {
 						'showcase' => '橱窗风格（品牌大屏 · 大图留白，适合讲故事拉新）',
 					),
 					'input_value' => 'shelf',
-					'desc'        => '「货架」= 现在的样子：各区块一样重、商品卡小而密，找东西最快。<br>「橱窗」= 品牌大屏：首页顶部一句主张 + 大图 + 数据带，模块之间用深浅色做节奏，适合讲故事、拉新客。<br>两种风格的<b>商品、价格、券、会员价、购物车、支付完全一样</b>，只是排版不同；顶部导航、底部、商品详情页不受影响。',
+					'desc'        => '「货架」= 现在的样子：各区块一样重、商品卡小而密，找东西最快。<br>「橱窗」= 品牌大屏：首页顶部一句主张 + 大图 + 数据带，模块之间用深浅色做节奏，适合讲故事、拉新客。<br>两种风格的<b>商品、价格、模块完全一样</b>，只是排版不同；顶部导航、底部、商品详情页不受影响。',
+				),
+				'as_dark_skin'  => array(
+					'label'       => '深色皮肤',
+					'type'        => 'checkbox',
+					'input_value' => '',
+					'desc'        => '开启后全站换成深黑底 + 白字（深色皮肤是一层纯 CSS 覆盖，不影响任何功能）。<br>默认关闭 —— 关闭时是主题自带的浅色（玫红主色 + 浅灰底 + 白卡片）。<br>也可以在 wp-config.php 里加 <code>define( \'AS_DARK_SKIN\', true );</code> 强制开启。',
 				),
 			);
 
@@ -1026,7 +1032,7 @@ add_action( 'wp_ajax_as_ads_search', 'as_site_settings_ads_search' );
  * 现在改成按**真实 slug 列表**判断，不再靠前缀猜。
  */
 function as_site_settings_assets( $hook ) {
-	$slugs = array( 'as-site-seo', 'as-site-footer', 'as-site-qr', 'as-site-media', 'as-shared', 'as-demo-import' );
+	$slugs = array( 'as-site-seo', 'as-site-footer', 'as-site-qr', 'as-site-media', 'as-shared', 'as-demo-import', 'as-site-init' );
 	$hit   = false;
 	foreach ( $slugs as $slug ) {
 		if ( false !== strpos( (string) $hook, $slug ) ) {

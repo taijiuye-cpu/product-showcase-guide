@@ -728,6 +728,23 @@ function as_home_style_is( $style ) {
 }
 
 /**
+ * 是否启用深色皮肤（style-refresh.css 这层覆盖）。
+ *
+ * 优先级：
+ *   1) wp-config.php 里 define( 'AS_DARK_SKIN', true ) —— 强制开/关（可覆盖后台设置）
+ *   2) 后台 → 主题设置 → 通用设置 → 「深色皮肤」开关
+ *   3) 默认关闭 —— 走 main.css 自带的浅色（玫红 + 浅灰底 + 白卡）
+ *
+ * @return bool
+ */
+function as_dark_skin_enabled() {
+	if ( defined( 'AS_DARK_SKIN' ) ) {
+		return (bool) AS_DARK_SKIN;
+	}
+	return (bool) get_theme_mod( 'as_dark_skin', false );
+}
+
+/**
  * 橱窗风格会接管哪些页面（决定要不要挂 showcase 的样式表）。
  *
  * @return bool
@@ -908,28 +925,45 @@ function as_enqueue_assets() {
             );
         }
 
-        // 全站视觉刷新（纯 CSS 覆盖层，必须排在上面几份之后）。
-        // 🔴 deps 只写 as-main / as-web-shop：写 as-style-showcase 会让详情页（不加载橱窗样式）
-        //    因依赖未注册而整表不输出（v2.87.60 踩过这个坑）。
-        wp_enqueue_style(
-            'as-style-refresh',
-            $as_main_uri . 'style-refresh.css',
-            array( 'as-main', 'as-web-shop' ),
-            as_asset_version( '/assets/css/style-refresh.css' )
-        );
+        /*
+         * 全站视觉刷新（纯 CSS 覆盖层）—— **可选换肤，默认关闭**。
+         *
+         * 它是一层「深色皮肤」：覆盖 main.css 的颜色变量，把全站换成深黑底白字。
+         * 基础版默认**不加载**，走 main.css 自带的浅色（玫红 + 浅灰底 + 白卡）。
+         *
+         * 开启方式（两个都行，任选其一）：
+         *   1) wp-config.php 加：define( 'AS_DARK_SKIN', true );
+         *   2) 后台 → 主题设置 → 通用设置 → 勾选「深色皮肤」
+         *
+         * 🔴 它**不在 dist 合并包里** —— 合并包是默认外观，
+         *    深色是覆盖层，单独 enqueue 才能随时开关。
+         */
+        if ( as_dark_skin_enabled() ) {
+            // deps 只写 as-main / as-web-shop：写 as-style-showcase 会让详情页（不加载橱窗样式）
+            // 因依赖未注册而整表不输出（v2.87.60 踩过这个坑）。
+            wp_enqueue_style(
+                'as-style-refresh',
+                $as_main_uri . 'style-refresh.css',
+                array( 'as-main', 'as-web-shop' ),
+                as_asset_version( '/assets/css/style-refresh.css' )
+            );
+        }
 
         /*
          * 商品详情页电脑端「京东式两栏」（v2.87.109）
          *   · 只在商品单页加载，其它页面一个字节都不多下；
          *   · 纯 CSS 覆盖层，手机端靠文件内的 @media (min-width:992px) 完全不介入；
-         *   · 必须排在 style-refresh.css 之后（deps 里三个都是无条件注册的样式，
-         *     不存在「依赖未注册导致整表不输出」的问题）。
+         *   · 排在主样式之后（深色皮肤开启时，它自己会覆盖在 style-refresh 之后）。
          */
         if ( is_singular( 'plm_product' ) ) {
+            $as_two_col_deps = array( 'as-main', 'as-web-shop' );
+            if ( as_dark_skin_enabled() ) {
+                $as_two_col_deps[] = 'as-style-refresh';
+            }
             wp_enqueue_style(
                 'as-single-two-col',
                 $as_main_uri . 'single-two-col.css',
-                array( 'as-main', 'as-web-shop', 'as-style-refresh' ),
+                $as_two_col_deps,
                 as_asset_version( '/assets/css/single-two-col.css' )
             );
         }
@@ -4878,6 +4912,13 @@ require_once get_template_directory() . '/inc/seo.php';
  * （都在本文件中、且定义在本 require 之前），所以必须放在这里。
  */
 require_once get_template_directory() . '/inc/site-settings.php';
+
+/**
+ * 主题初始化 —— 一键搭建站点通用骨架（页面 / 菜单 / 站点信息 / SEO / 固定链接）。
+ * 只做与内容无关的东西；商品、分类、品牌、文章一概不碰。
+ * 依赖 as_asset_version()（本文件内已定义），所以放在这里。
+ */
+require_once get_template_directory() . '/inc/theme-initializer.php';
 
 /**
  * 品牌添加 Logo 图片字段

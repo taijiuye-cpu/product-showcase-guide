@@ -24,6 +24,30 @@ defined( 'ABSPATH' ) || exit;
  * ======================================================================== */
 
 /**
+ * 站点是否有会员体系。
+ *
+ * 基础版没有会员功能 —— 前台的「成为会员」按钮、「会员折扣」统计格、
+ * 会员中心链接都指向不存在的页面，所以模板要按这个开关隐藏它们。
+ *
+ * 完整版（含 inc/vip.php、inc/web-member.php）里这个函数不存在，
+ * 模板用 function_exists() 保护 → 会员入口照常显示。
+ *
+ * @return bool 基础版恒为 false。
+ */
+function as_has_member_system() {
+	return false;
+}
+
+/**
+ * 站点是否有优惠券系统 —— 基础版恒为 false。
+ *
+ * @return bool
+ */
+function as_has_coupon_system() {
+	return false;
+}
+
+/**
  * 当前访客是否是 VIP —— 基础版无会员体系，恒为 false。
  *
  * @param int $uid 用户 ID（保留参数只为与原函数签名一致）。
@@ -434,12 +458,30 @@ function as_wx_jump_env() {
  * ======================================================================== */
 
 /**
- * 小程序配置 —— 基础版不含小程序，恒返回空配置。
+ * 小程序配置 —— 基础版没有小程序，但 **option 存储（as_mini_config）沿用**，
+ * 因为网站设置页里「服务说明标签」「首页优惠模块显示数量」「首页广告位」
+ * 等设置仍存在这张表里（见 inc/site-settings.php 的 source=option 字段）。
+ *
+ * 基础版只读这几个键，其余小程序专属键（appid / 密钥 / 支付相关）一律忽略。
  *
  * @return array
  */
 function as_mini_get_config() {
-	return array();
+	static $cfg = null;
+	if ( null === $cfg ) {
+		$saved = get_option( 'as_mini_config', array() );
+		$cfg   = is_array( $saved ) ? $saved : array();
+	}
+
+	$kept = array( 'service_tags', 'flash_count', 'home_ads', 'flash_end_at' );
+
+	$out = array();
+	foreach ( $kept as $key ) {
+		if ( isset( $cfg[ $key ] ) ) {
+			$out[ $key ] = $cfg[ $key ];
+		}
+	}
+	return $out;
 }
 
 /**
@@ -460,7 +502,7 @@ function as_mini_opt( $key ) {
 	}
 
 	// 基础版保留的键：网站侧仍然在用。
-	$kept = array( 'service_tags', 'flash_count', 'home_ads' );
+	$kept = array( 'service_tags', 'flash_count', 'home_ads', 'flash_end_at' );
 
 	if ( ! in_array( $key, $kept, true ) ) {
 		return '';

@@ -122,6 +122,7 @@ if ( $as_sc_is_search && have_posts() ) {
 					</div>
 				<?php endif; ?>
 
+				<?php if ( ! function_exists( 'as_has_member_system' ) || as_has_member_system() ) : ?>
 				<div class="as-sc-side-box is-vip">
 					<?php if ( $as_sc_is_vip ) : ?>
 						<?php /* 会员态：文案长度刻意与访客态对齐（都是 3 行左右），避免侧栏高度变化把下方内容顶动 */ ?>
@@ -134,6 +135,7 @@ if ( $as_sc_is_search && have_posts() ) {
 						<a class="as-sc-btn is-main is-sm" href="<?php echo esc_url( home_url( '/member/' ) ); ?>">成为会员</a>
 					<?php endif; ?>
 				</div>
+				<?php endif; ?>
 			</aside>
 		<?php endif; ?>
 

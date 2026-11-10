@@ -71,6 +71,12 @@ $as_sc_vip      = $as_sc_rate ? ( '0' === $as_sc_rate ? '无折扣' : rtrim( rtr
  */
 $as_sc_is_vip = function_exists( 'as_vip_is_vip' ) ? (bool) as_vip_is_vip() : false;
 $as_sc_vip_url = home_url( '/member/' );
+/*
+ * 会员体系是否存在（基础版没有 → 相关入口整块隐藏，
+ * 免得出现指向 /member/ 的死链）。
+ * 完整版没有这个函数，function_exists 保护 → 会员入口照常显示。
+ */
+$as_sc_has_member = ! function_exists( 'as_has_member_system' ) || (bool) as_has_member_system();
 $as_sc_promise  = function_exists( 'as_service_tags' ) ? as_service_tags() : array();
 $as_sc_promise  = array_slice( array_filter( $as_sc_promise ), 0, 4 );
 
@@ -129,12 +135,16 @@ foreach ( array_slice( $as_sc_hero_pool, 0, 3 ) as $as_sc_hp ) {
 			<p class="as-sc-hero-desc"><?php echo esc_html( $as_sc_desc ); ?></p>
 			<div class="as-sc-btns">
 				<a class="as-sc-btn is-main" href="<?php echo esc_url( $as_sc_archive ); ?>">浏览全部商品</a>
-				<a class="as-sc-btn" href="<?php echo esc_url( $as_sc_vip_url ); ?>"><?php echo $as_sc_is_vip ? '进入会员中心' : '成为会员享专属价'; ?></a>
+				<?php if ( $as_sc_has_member ) : ?>
+					<a class="as-sc-btn" href="<?php echo esc_url( $as_sc_vip_url ); ?>"><?php echo $as_sc_is_vip ? '进入会员中心' : '成为会员享专属价'; ?></a>
+				<?php endif; ?>
 			</div>
 			<div class="as-sc-stats">
 				<div><b><?php echo (int) $as_sc_products; ?></b><i>在售商品</i></div>
 				<div><b><?php echo (int) $as_sc_cats; ?></b><i>商品分类</i></div>
-				<div><b><?php echo esc_html( $as_sc_vip ); ?></b><i>会员折扣</i></div>
+				<?php if ( $as_sc_has_member ) : ?>
+					<div><b><?php echo esc_html( $as_sc_vip ); ?></b><i>会员折扣</i></div>
+				<?php endif; ?>
 				<div><b><?php echo count( $as_sc_promise ); ?></b><i>服务承诺</i></div>
 			</div>
 		</div>
@@ -547,7 +557,9 @@ endif;
 		<p>把「第一次买该买什么」「怎么挑不踩雷」写清楚，比什么推荐位都管用。</p>
 		<div class="as-sc-btns is-center">
 			<a class="as-sc-btn is-main" href="<?php echo esc_url( $as_sc_archive ); ?>">浏览全部商品</a>
-			<a class="as-sc-btn" href="<?php echo esc_url( $as_sc_vip_url ); ?>"><?php echo $as_sc_is_vip ? '会员中心' : '成为会员'; ?></a>
+			<?php if ( $as_sc_has_member ) : ?>
+				<a class="as-sc-btn" href="<?php echo esc_url( $as_sc_vip_url ); ?>"><?php echo $as_sc_is_vip ? '会员中心' : '成为会员'; ?></a>
+			<?php endif; ?>
 		</div>
 	</div>
 </section>

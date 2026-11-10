@@ -2,33 +2,30 @@
  "app.min.css": {
   "sources": [
    "main.css",
-   "web-shop.css",
-   "style-refresh.css"
+   "web-shop.css"
   ],
-  "bytes": 139180,
-  "gzip": 24920,
-  "hash": "274d032eaf"
+  "bytes": 105116,
+  "gzip": 19018,
+  "raw_bytes": 192595
  },
  "showcase.min.css": {
   "sources": [
    "main.css",
    "web-shop.css",
-   "style-showcase.css",
-   "style-refresh.css"
+   "style-showcase.css"
   ],
-  "bytes": 164075,
-  "gzip": 28881,
-  "hash": "9957f1ff38"
+  "bytes": 130031,
+  "gzip": 23053,
+  "raw_bytes": 248722
  },
  "single.min.css": {
   "sources": [
    "main.css",
    "web-shop.css",
-   "style-refresh.css",
    "single-two-col.css"
   ],
-  "bytes": 144528,
-  "gzip": 25766,
-  "hash": "611f2f100d"
+  "bytes": 110464,
+  "gzip": 19814,
+  "raw_bytes": 208329
  }
 }
