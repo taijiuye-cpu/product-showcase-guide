@@ -113,9 +113,10 @@ jobs:
                ':(exclude)CONTRIBUTING.md' \
                ':(exclude)CODE_OF_CONDUCT.md' \
                ':(exclude)SECURITY.md' \
-               ':(exclude)LICENSE' \
-               ':(exclude)readme.txt' \
                ':(exclude)GITHUB-开源指南.md'
+          # ⚠️ readme.txt 与 LICENSE **保留在包里**：
+          #    readme.txt 是 WordPress.org 主题目录的必需文件，
+          #    LICENSE 是 GPL 授权的应随文件分发部分。
 
           # 自检：zip 内必须有主题目录，且关键文件齐全
           echo "--- zip 内结构（前 10 项）---"
@@ -123,7 +124,9 @@ jobs:
           for required in product-showcase-guide/style.css \
                           product-showcase-guide/functions.php \
                           product-showcase-guide/index.php \
-                          product-showcase-guide/screenshot.png; do
+                          product-showcase-guide/screenshot.png \
+                          product-showcase-guide/readme.txt \
+                          product-showcase-guide/LICENSE; do
             if ! unzip -l "$zip_name" | grep -q " $required$"; then
               echo "缺少必需文件: $required" >&2
               exit 1
