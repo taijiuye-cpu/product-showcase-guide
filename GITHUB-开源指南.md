@@ -188,11 +188,41 @@ vendor/
 | 项 | 值 |
 |---|---|
 | 仓库 | https://github.com/taijiuye-cpu/product-showcase-guide |
-| 许可证 | GPL v2 or later |
+| Release 下载 | https://github.com/taijiuye-cpu/product-showcase-guide/releases/tag/v1.0.0 |
+| 许可证 | GPL v2 or later（GitHub 识别为 `GPL-2.0`） |
 | 版本 | 1.0.0 |
-| 文件数 | 90 |
+| 仓库文件数 | 91（含 .github / doc / 说明文档） |
+| 安装包文件数 | 72（38 个 PHP），zip 约 700KB |
 | 主题目录名 | `product-showcase-guide` |
 | 文本域（Text Domain） | `product-showcase-guide` |
 | PHP 要求 | 7.4+ |
-| WordPress 要求 | 5.9+ |
-| CI | PHP 语法检查（7.4 / 8.3）+ 发版自动打包 |
+| WordPress 要求 | 5.9+（已测 7.1） |
+| CI | PHP 语法检查（7.4 / 8.3 矩阵）+ 换行检查 + 发版自动打包 zip |
+
+### 已配置的自动流程
+
+| 触发 | 工作流 | 做什么 |
+|---|---|---|
+| push / PR 到 main | `php-lint.yml` | 逐个 PHP 文件语法检查 + 文本文件末尾换行检查 |
+| 推 `v*` tag | `release.yml` | 校验 tag 与 style.css 版本号一致 → 打包带主题目录前缀的 zip → 自动发布 Release |
+| 手动触发 / 改动 workflow | `repo-setup.yml` | 设置仓库描述与 topics、开启 secret scanning |
+
+### 本次发布踩过的三个坑（供以后参考）
+
+1. **Device Flow 拿到的 token 没有仓库写权限**
+   GitHub 把返回的 token 降级成了 `ghu_` 前缀的 GitHub App user-to-server token，
+   它的写权限由 App 的 installation 决定，加 OAuth scope 无效。
+   → **解法：用 SSH 公钥推送**（走账号权限，最直接，也最省事）。
+
+2. **workflow 里 `permissions: metadata: write` 会让整个 workflow 校验失败**
+   `metadata` 不是 `permissions` 键的有效 scope（有效的是 contents / issues /
+   pull-requests / actions / security-events 等）。
+   症状很隐蔽：workflow 显示 failure，但 job 列表是空的 —— 因为它根本没进到执行阶段。
+   → **解法：只写有效 scope**；查证入口是
+   [Workflow syntax → permissions](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions)。
+
+3. **`zip -r xxx.zip .` 打出来的包 WordPress 装不上**
+   WordPress 后台上传主题要求 zip 内**第一层就是主题目录**，
+   `zip -r ... .` 却是把当前目录内容直接打进去，没有前缀目录。
+   → **解法：用 `git archive --prefix=主题名/ --format=zip`**，结构天然正确，
+   并且可以用 `':(exclude)路径'` 精确排除仓库专属文件。
