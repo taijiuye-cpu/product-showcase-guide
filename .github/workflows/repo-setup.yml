@@ -1,17 +1,25 @@
 name: 仓库设置
 
 # 一次性任务：设置仓库描述与 topics。
-# 为什么需要它：仓库元数据（description / topics）只能通过 API 修改，
-# 而 SSH 推送改不了。仓库自带的 GITHUB_TOKEN 有这个权限。
 #
-# 手动触发：Actions → 仓库设置 → Run workflow
-# （不要挂在 push 上 —— 描述和 topics 是低频修改，每次推送都跑没意义）
+# 为什么需要它：仓库元数据（description / topics）只能通过 API 修改，
+# SSH 推送改不了。仓库自带的 GITHUB_TOKEN 有这个权限。
+#
+# 触发方式：推送一个带 [skip ci] 之外任意改动的提交，或在 Actions 里手动运行。
+# 若自动触发失败，多半是仓库的 Actions 权限被设成了「只读」——
+# 去 Settings → Actions → General → Workflow permissions 改成
+# 「Read and write permissions」。
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/repo-setup.yml'
 
 permissions:
   contents: write
+  metadata: write
 
 jobs:
   setup:
@@ -20,19 +28,30 @@ jobs:
     timeout-minutes: 5
 
     steps:
+      - name: 诊断 token 权限
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.info('token 权限: ' + JSON.stringify(context.payload));
+            const perms = await github.rest.actions.getActionsPermissionsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            }).catch(e => ({ data: { error: e.status + ' ' + e.message } }));
+            core.info('仓库 Actions 权限: ' + JSON.stringify(perms.data));
+
       - name: 设置仓库描述
         uses: actions/github-script@v7
         with:
           script: |
             try {
-              const r = await github.rest.repos.update({
+              await github.rest.repos.update({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 description: 'WordPress 商品导购与评测主题：商品管理、品牌品类分类、限时特惠、SEO、整页缓存与图片优化。开源基础版（GPL v2）。',
               });
-              core.info('描述已更新');
+              core.info('✅ 描述已更新');
             } catch (e) {
-              core.error('设置描述失败: ' + e.status + ' ' + e.message);
+              core.error('❌ 设置描述失败: ' + e.status + ' ' + e.message);
             }
 
       - name: 设置 topics
@@ -59,9 +78,9 @@ jobs:
                   'chinese',
                 ],
               });
-              core.info('topics 已设置');
+              core.info('✅ topics 已设置');
             } catch (e) {
-              core.error('设置 topics 失败: ' + e.status + ' ' + e.message);
+              core.error('❌ 设置 topics 失败: ' + e.status + ' ' + e.message);
             }
 
       - name: 开启 Secret scanning 与 Push protection
@@ -74,7 +93,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
               });
-              core.info('security manager 已开启');
+              core.info('✅ security manager 已开启');
             } catch (e) {
-              core.warning('security manager: ' + e.status + ' ' + e.message);
+              core.warning('⚠️ security manager: ' + e.status + ' ' + e.message);
             }
