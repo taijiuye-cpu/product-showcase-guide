@@ -47,5 +47,5 @@ jobs:
                 fail=1
               fi
             fi
-          done < <(find . -type f \( -name '*.php' -o -name '*.js' -o -name '*.css' -o -name '*.json' -o -name '*.md' -o -name '*.txt' -o -name '*.yml' \) -not -path './node_modules/*' -not -path './vendor/*' -print0)
+          done < <(find . -type f \( -name '*.php' -o -name '*.js' -o -name '*.css' -o -name '*.json' -o -name '*.md' -o -name '*.txt' -o -name '*.yml' -o -name '*.py' \) -not -path './node_modules/*' -not -path './vendor/*' -not -path './assets/css/dist/*' -print0)
           exit $fail

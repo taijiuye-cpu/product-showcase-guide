@@ -101,6 +101,7 @@ def main() -> int:
         out_path = os.path.join(DIST, bundle)
         with open(out_path, "w", encoding="utf-8", newline="\n") as f:
             f.write(merged)
+            f.write("\n")   # 末尾换行 —— CI 会检查，缺了会红
 
         raw = sum(os.path.getsize(os.path.join(CSS, s)) for s in sources)
         size = os.path.getsize(out_path)
