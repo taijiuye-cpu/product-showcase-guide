@@ -5,7 +5,7 @@ name: 仓库设置
 # 为什么需要它：仓库元数据（description / topics）只能通过 API 修改，
 # SSH 推送改不了。仓库自带的 GITHUB_TOKEN 有这个权限。
 #
-# 触发方式：推送一个带 [skip ci] 之外任意改动的提交，或在 Actions 里手动运行。
+# 手动触发：Actions → 仓库设置 → Run workflow
 # 若自动触发失败，多半是仓库的 Actions 权限被设成了「只读」——
 # 去 Settings → Actions → General → Workflow permissions 改成
 # 「Read and write permissions」。
@@ -19,7 +19,6 @@ on:
 
 permissions:
   contents: write
-  metadata: write
 
 jobs:
   setup:
@@ -28,36 +27,26 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - name: 诊断 token 权限
+      - name: 设置仓库元数据
         uses: actions/github-script@v7
         with:
           script: |
-            core.info('token 权限: ' + JSON.stringify(context.payload));
-            const perms = await github.rest.actions.getActionsPermissionsForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            }).catch(e => ({ data: { error: e.status + ' ' + e.message } }));
-            core.info('仓库 Actions 权限: ' + JSON.stringify(perms.data));
+            const lines = [];
+            const log = (m) => { core.info(m); lines.push(m); };
 
-      - name: 设置仓库描述
-        uses: actions/github-script@v7
-        with:
-          script: |
+            log('token 权限: ' + JSON.stringify(context.payload));
+
             try {
-              await github.rest.repos.update({
+              const r = await github.rest.repos.update({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 description: 'WordPress 商品导购与评测主题：商品管理、品牌品类分类、限时特惠、SEO、整页缓存与图片优化。开源基础版（GPL v2）。',
               });
-              core.info('✅ 描述已更新');
+              log('✅ 描述已更新');
             } catch (e) {
-              core.error('❌ 设置描述失败: ' + e.status + ' ' + e.message);
+              log('❌ 设置描述失败: ' + e.status + ' ' + e.message);
             }
 
-      - name: 设置 topics
-        uses: actions/github-script@v7
-        with:
-          script: |
             try {
               await github.rest.repos.replaceAllTopics({
                 owner: context.repo.owner,
@@ -78,22 +67,19 @@ jobs:
                   'chinese',
                 ],
               });
-              core.info('✅ topics 已设置');
+              log('✅ topics 已设置');
             } catch (e) {
-              core.error('❌ 设置 topics 失败: ' + e.status + ' ' + e.message);
+              log('❌ 设置 topics 失败: ' + e.status + ' ' + e.message);
             }
 
-      - name: 开启 Secret scanning 与 Push protection
-        uses: actions/github-script@v7
-        with:
-          script: |
-            // 公开仓库这两项免费，能防止密钥被误提交
             try {
               await github.rest.repos.enableSecurityManager({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
               });
-              core.info('✅ security manager 已开启');
+              log('✅ security manager 已开启');
             } catch (e) {
-              core.warning('⚠️ security manager: ' + e.status + ' ' + e.message);
+              log('⚠️ security manager: ' + e.status + ' ' + e.message);
             }
+
+            await core.summary.addRaw(lines.join('\n')).write();
