@@ -1,0 +1,69 @@
+name: 仓库设置
+
+# 一次性任务：设置仓库描述与 topics。
+# 为什么需要它：仓库元数据（description / topics）只能通过 API 修改，
+# 而 SSH 推送改不了。仓库自带的 GITHUB_TOKEN 有这个权限。
+#
+# 手动触发：Actions → 仓库设置 → Run workflow
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  setup:
+    name: 设置描述与 topics
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: 设置仓库描述
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              description: 'WordPress 商品导购与评测主题：商品管理、品牌品类分类、限时特惠、SEO、整页缓存与图片优化。开源基础版（GPL v2）。',
+            });
+
+      - name: 设置 topics
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.replaceAllTopics({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              topicNames: [
+                'wordpress',
+                'wordpress-theme',
+                'wordpress-themes',
+                'theme',
+                'blog',
+                'custom-logo',
+                'custom-menu',
+                'featured-images',
+                'translation-ready',
+                'product-showcase',
+                'seo',
+                'webp',
+                'chinese',
+              ],
+            });
+
+      - name: 开启 Secret scanning 与 Push protection
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // 公开仓库这两项免费，能防止密钥被误提交
+            try {
+              await github.rest.repos.enableSecurityManager({ owner: context.repo.owner, repo: context.repo.repo });
+              console.log('security manager 已开启');
+            } catch (e) {
+              console.log('security manager: ' + e.message);
+            }

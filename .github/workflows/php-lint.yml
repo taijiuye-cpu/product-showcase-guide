@@ -35,11 +35,17 @@ jobs:
       - name: 检查文件末尾换行
         run: |
           fail=0
+          # 只检查文本文件；PNG 等二进制文件末字节不是换行符是正常的
           while IFS= read -r -d '' file; do
-            # 末字节不是换行符（10）就报错
-            if [ -s "$file" ] && [ "$(tail -c 1 "$file" | od -An -t u1 | tr -d ' ')" != "10" ]; then
-              echo "缺少末尾换行: $file"
-              fail=1
+            case "$file" in
+              *.png|*.jpg|*.jpeg|*.gif|*.webp|*.ico|*.woff|*.woff2|*.ttf|*.eot) continue ;;
+            esac
+            if [ -s "$file" ]; then
+              last=$(tail -c 1 "$file" | od -An -t u1 | tr -d ' \n')
+              if [ "$last" != "10" ]; then
+                echo "缺少末尾换行: $file"
+                fail=1
+              fi
             fi
-          done < <(find . -name '*.php' -print0)
+          done < <(find . -type f \( -name '*.php' -o -name '*.js' -o -name '*.css' -o -name '*.json' -o -name '*.md' -o -name '*.txt' -o -name '*.yml' \) -not -path './node_modules/*' -not -path './vendor/*' -print0)
           exit $fail
