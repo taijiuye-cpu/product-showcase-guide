@@ -209,6 +209,25 @@ function as_init_page_defs() {
 }
 
 /**
+ * 找已存在的页面（只认**已发布**的）。
+ *
+ * 🔴 为什么不用 get_page_by_path()：WordPress 自带一个「隐私政策」草稿页
+ *    （post_status = draft），get_page_by_path() 会把它也算进去 →
+ *    初始化任务以为页面已存在就跳过 → 结果前台 /privacy/ 访问 404。
+ *    所以这里额外要求 post_status 是 publish。
+ *
+ * @param string $slug 页面 slug。
+ * @return WP_Post|null
+ */
+function as_init_find_page( $slug ) {
+	$page = get_page_by_path( $slug );
+	if ( $page && 'publish' === $page->post_status ) {
+		return $page;
+	}
+	return null;
+}
+
+/**
  * 任务：创建页面。
  *
  * @return array 执行结果：array( 'ok' => bool, 'msg' => string, 'detail' => array )
@@ -218,9 +237,28 @@ function as_init_task_pages() {
 	$skipped = array();
 
 	foreach ( as_init_page_defs() as $key => $def ) {
-		$existing = get_page_by_path( $def['slug'] );
+		$existing = as_init_find_page( $def['slug'] );
 		if ( $existing ) {
 			$skipped[] = $def['title'];
+			continue;
+		}
+
+		/*
+		 * WordPress 自带一个「隐私政策」**草稿**页（post_status = draft）。
+		 * 它没发布 → 前台访问 404 → 跟「页面不存在」效果一样。
+		 * 这里把草稿发布出来并填上内容，而不是新建一个重复的页面。
+		 */
+		$draft = get_page_by_path( $def['slug'] );
+		if ( $draft && 'publish' !== $draft->post_status ) {
+			wp_update_post(
+				array(
+					'ID'           => $draft->ID,
+					'post_status'  => 'publish',
+					'post_title'   => $def['title'],
+					'post_content' => $def['content'],
+				)
+			);
+			$created[] = $def['title'] . '（由草稿发布）';
 			continue;
 		}
 
@@ -714,7 +752,7 @@ function as_init_status() {
 	$page_defs = as_init_page_defs();
 	$missing   = array();
 	foreach ( $page_defs as $def ) {
-		if ( ! get_page_by_path( $def['slug'] ) ) {
+		if ( ! as_init_find_page( $def['slug'] ) ) {
 			$missing[] = $def['title'];
 		}
 	}
