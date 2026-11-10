@@ -5,6 +5,16 @@
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.0.1] - 2026-11-11
+
+- 新增「主题初始化」后台页：创建必要页面与导航菜单、补全站点信息与 SEO、
+  设置服务说明标签与固定链接（幂等，不覆盖已有内容，不碰商品与分类）
+- 深色皮肤改为可选：默认走主题自带的浅色，后台可开关，也可用
+  `AS_DARK_SKIN` 常量强制开启
+- 会员入口按能力显示：基础版隐藏「成为会员」按钮与「会员折扣」统计格
+- 修复基础版服务说明标签读不到、首页「服务承诺」显示 0 的问题
+- 新增 `.tools/build_css.py`（CSS 合并包的构建脚本）
+
 ## [1.0.0] - 2026-11-11
 
 首个开源版本。这是面向个人与中小站点的**基础版**（不含交易类功能）。
@@ -38,4 +48,5 @@
 - 交易相关的模板调用统一走 `inc/core-compat.php` 的降级实现，
   保证关闭状态下前台表现与开启完整版时一致
 
+[1.0.1]: https://github.com/taijiuye-cpu/product-showcase-guide/releases/tag/v1.0.1
 [1.0.0]: https://github.com/taijiuye-cpu/product-showcase-guide/releases/tag/v1.0.0
